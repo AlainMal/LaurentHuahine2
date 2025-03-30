@@ -3,6 +3,58 @@ from tkinter import Checkbutton, BooleanVar,ttk, filedialog
 from threading import Thread
 from Package.CANUSB import CanMsg, WindowsUSBCANInterface, CanError
 
+
+class CANUSBReader(Thread):
+
+    def __init__(self, interface, update_callback, file: str):
+        self._interface = interface
+        self._output_fd = None
+        self._stop_flag = False
+        self._update_callback = update_callback
+        if file is not None:
+            self.open_file(file)
+
+    def stop(self):
+        self._stop_flag = True
+
+    def start(self):
+        self._interface.open()
+        super().start()
+
+    def open_file(self, file):
+        try:
+            self._output_fd = open(file, "a")  # Créer le nouveau fichier
+        except IOError as err:
+            print(f"Erreur sur fichier {file}: {err}")
+
+    def close_file(self):
+        if self._output_fd is not None:
+            self._output_fd.close()
+            self._output_fd = None
+
+    def run(self):
+        count = 0
+        while not self._stop_flag:
+            try:
+                msg = self._interface.read()
+                if self._output_fd is not None:
+                    self._output_fd.write(f"{msg.TimeStamp} {msg.Id:08X} {msg.data.hex(" ")}\n")
+                if self._update_callback is not None:
+                    self._update_callback(count, msg)
+                count += 1
+            except CanError as err:
+                print("Erreur CAN", err)
+                break
+            except IOError as err:
+                print("Erreur fichier", err)
+            except Exception as err:  # catch all => à enlever
+                print("Exception:", err)
+                break
+
+        self.close_file()
+        self._interface.close()
+
+
 class MainWindow:
 
     # Fonction de creation de la fenêtre principale
@@ -14,25 +66,15 @@ class MainWindow:
         frame = tk.Frame(self._root)
         frame.place(x=50, y=100)
         self._can_interface = None
+        self._reader = None
+        self.fichier_chemin = None
         # créé l'interface avec le CAN
-
         try:
             self._can_interface = WindowsUSBCANInterface()
         except CanError:
             raise
 
-        self._stop_loop = False  # Réinitialise la condition d'arrêt
-        self._output_fd = None
-
         # =============== ALJOUT DES CONTROLES SUR LA FENETRE ===============================
-        # Ajout d'un bouton OPEN et défini sa taille puis défini sont emplacement
-        self.button_open = tk.Button(self._root, text="Open", width=10, height=1, command=self.on_open_click)
-        # button.pack(pady=20)
-        self.button_open.place(x=10, y=40)
-
-        # Ajout d'un bouton CLOSE et défini sa taille puis défini sont emplacement
-        self.button_close = tk.Button(self._root, text="Close", width=10, height=1, command=self.on_close_click)
-        self.button_close.place(x=100, y=40)
 
         # Ajout d'un bouton READ et défini sa taille puis défini sont emplacement
         self.button_read = tk.Button(self._root, text="Read", width=10, height=1, command=self.on_read_click)
@@ -77,11 +119,6 @@ class MainWindow:
         self._root.mainloop()
 
     # ========== FONCTIONS D'ACTIVATION ET DESACTIVATION DES BOUTONS ==========
-    def disable_button_open(self):
-        self.button_open['state'] = 'disabled'  # Désactive le bouton
-
-    def enable_button_open(self):
-        self.button_open['state'] = 'normal'  # Active le bouton
 
     def disable_button_read(self):
         self.button_read['state'] = 'disabled'  # Désactive le bouton
@@ -91,45 +128,26 @@ class MainWindow:
     # =========================================================================
 
     # =================== FONCTIONS DES CONTROLES SUR LA FENETRE ======================
-    # Fonction sur OPEN click
-    def on_open_click(self):
-
-        print("Bouton cliqué ! Voici un programme d'ouverture.")
-
-        # Exécution de la fonction OPEN
-        try:
-            self._can_interface.open()
-        except CanError:
-            print("PAS BON le HANDLE")
-            return
-        self.disable_button_open()
 
     def on_stop_click(self):
-        self._stop_loop = True  # Met fin à la boucle
+        # Met fin à la boucle
+        if self._reader is not None:
+            self._reader.stop()
+            self._reader.join()
+            self._reader = None
         self.enable_button_read()
 
     def on_read_click(self):    # Lit en temps réel
         print("Bouton cliqué ! Voici votre programme de lecture.")
-        compteur = 0
-        self._stop_loop = False
-        self.disable_button_read()   # Desavtive le boutpn READ
+
+        self.disable_button_read()   # Desactive le boutpn READ
         # Appelle la fonction de lecture en temps réel
-        while not self._stop_loop:
-            try:
-                msg = self._can_interface.read()
-                self.enregistre(msg)
-                compteur += 1
-                self.label.config(text=f"Compteur : {compteur}")
-                self._root.update()  # Donne la main au systême
-            except CanError as err:
-                print(err)
-                break
-            except Exception as err:   # catch all => à enlever
-                print("Exception:", err)
-                break
+        self._reader = CANUSBReader(self._can_interface, self.update_read, self.fichier_chemin)
+        self._reader.start()
 
-        self.enable_button_read()
-
+    def update_read(self, compteur, msg):
+        self.label.config(text=f"Compteur : {compteur}")
+        self._root.update()
 
     def on_checkbox_change(self):
         if self.check_enr.get():  # Si la case est cochée
@@ -138,15 +156,13 @@ class MainWindow:
             self.choix_fichier()
 
         else:  # Si la case est décochée
-            self.close_file()
             self.fichier_chemin = None
             print("Checkbox décochée - Enregistrement désactivé")
 
     def on_close_click(self):
         self.on_stop_click()         # Arrête le boucle
         self._can_interface.close()    # Ferme l'adaptateur
-        self._output_fd.close()
-        self.enable_button_open()    # Active le bouron d'ouverture
+        self.enable_button_read()    # Active le bouron d'ouverture
         result = False
 
     def choix_fichier(self):
@@ -156,23 +172,6 @@ class MainWindow:
             filetypes=(("Fichiers texte", "*.txt"), ("Tous les fichiers", "*.*")),
             defaultextension=".txt"
         )
-
-    def open_file(self):
-        if self.fichier_chemin is not None:
-            try:
-                self._output_fd = open(self.fichier_chemin, "a")  # Créer le nouveau fichier
-            except IOError as err:
-                print(f"Erreur sur fichier {self.fichier_chemin}: {err}")
-
-    def enregistre(self, msg: CanMsg):
-        if self.check_enr and self._output_fd is not None:
-            self._output_fd.write(f"{msg.TimeStamp} {msg.Id:08X} {msg.data.hex(" ")}\n")
-
-    def close_file(self):
-        if self._output_fd is not None:
-            self._output_fd.close()
-            self._output_fd = None
-
 
 
     # ==================================================================================
