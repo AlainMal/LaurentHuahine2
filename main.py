@@ -13,6 +13,7 @@ class CANUSBReader(Thread):
 
     def __init__(self, interface, update_callback, file: str):
         super().__init__()
+        self._mainwindow = MainWindow
         self._interface = interface
         self._output_fd = None
         self._stop_flag = False
@@ -147,8 +148,11 @@ class FenetreStatus:
 class MainWindow:
 
     # Fonction de creation de la fenêtre principale
+    lab_fic = None
+
     def __init__(self):
         # On initialise les instances (ce sont des variables locales qui sont disponibles sur toute la class.)
+
         self._FenetreStatus = None
         self._status = None
         self._root = tk.Tk()
@@ -219,9 +223,13 @@ class MainWindow:
         self.tree.configure(yscrollcommand=scrollbar.set)
         scrollbar.pack(side='right', fill='y')
 
-        # Ajouter un label
-        self.label = tk.Label(self._root, text="Affichage du nombre de trames", width=40, anchor='w')
+        # Ajouter un label qui affiche le nombre de scrutations
+        self.label = tk.Label(self._root, text="Affichage du nombre de scrutations ", width=40, anchor='w')
         self.label.place(x=5, y=10)
+
+        # Ajouter un label qui affiche le fichier en cours
+        self.lab_fic = tk.Label(self._root, text="Fichier en cours", width=40, anchor='w')
+        self.lab_fic.place(x=5, y=160)
         # ====================== FIN DES CONTROLES ======================================
 
     # ========== FONCTIONS D'ACTIVATION ET DESACTIVATION DES BOUTONS ==========
@@ -319,11 +327,14 @@ class MainWindow:
 
     def choix_fichier(self):
         # Ouvrir une boîte de dialogue pour sélectionner un fichier
+        # print("Fichier :" + str(self.fichier_chemin))
         self.fichier_chemin = filedialog.asksaveasfilename(
             title="Choisissez le fichier à enregistrer",
             filetypes=(("Fichiers texte", "*.txt"), ("Tous les fichiers", "*.*")),
             defaultextension=".txt"
         )
+        print("Fichier :" + str(self.fichier_chemin))
+        self.lab_fic.config(text=f"Fichier : {self.fichier_chemin}")
 
     def on_status_click(self):
         try:
