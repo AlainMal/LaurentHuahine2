@@ -48,8 +48,7 @@ class WindowsUSBCANInterface:
         self._handle = self._dll.canusb_Open(None, bitrate, acceptance_code, acceptance_mask, flags)
         if self._handle is None:
             raise CanError("Erreur ouverture canal CAN")
-        else:
-            return self._handle     # Retourne le handle dont on a besoin pour savoir si c'est ouvert
+        # Retourne le handle dont on a besoin pour savoir si c'est ouvert => NON
 
     # Fonction de lecture
     def read(self) -> CanMsg:       # Retourne un pointeur sur le CanMsg

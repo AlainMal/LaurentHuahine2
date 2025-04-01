@@ -73,19 +73,19 @@ class CANUSBReader(Thread):
 # ******************************** FIN DE LA CLASS ENREGISTREMENT ******************************************************
 
 # ************************************ FENETRE DU STATUS ***************************************************************
-class FentreStatus:
+class FenetreStatus:
     def __init__(self,status):
 
-        self._colonne_2 = None
-        self._status_data = None
-        self._designation = None
+        # self._colonne_2 = None
+        # self._status_data = None
+        #  self._designation = None    # => désignation à plusieurs valeurs variable de boucle ?
         self._treeview = None
         self._lab_status = None
-        self._index = None
-        self._element = None
+        # self._index = None
+        # self._element = None
         
-        self._status = status
-        self._status = tk.Tk() # Crée une nouvelle fenêtre
+        self._status = status # ????
+        self._status = tk.Tk() # Crée une nouvelle fenêtre On ecrase la variable direct ?
         self._status.title("Etats")
         self._status.geometry("230x205")
 
@@ -118,9 +118,17 @@ class FentreStatus:
         self._treeview.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
         print("TreeView Installé")
 
+    _status_data = (
+        ("Pas de défaut", CANSTATUS_NO_ERROR),
+        ("Buffer de reception plein", CANSTATUS_RECEIVE_FIFO_FULL),
+        ("Buffer de transmission plein", CANSTATUS_TRANSMIT_FIFO_FULL),
+        ()
+    )
+
     def remplir_treeview(self,status):
-        self._status = status
+        # self._status = status  # pourquoi affecter le paramètre ? En plus status est une sous-fenêtre
         # Liste des erreurs possibles
+        """
         self._status_data = [
             {"designation": "Pas de défaut", "Lab_Status": CANSTATUS_NO_ERROR},
             {"designation": "Buffer de reception plein", "Lab_Status": CANSTATUS_RECEIVE_FIFO_FULL},
@@ -131,16 +139,20 @@ class FentreStatus:
             {"designation": "Défaut d'arbitrage", "Lab_Status": CANSTATUS_ARBITRATION_LOST},
             {"designation": "Erreur sur le bus", "Lab_Status": CANSTATUS_BUS_ERROR},
         ]
+        ici le dictionaire est inutile, à quoi sert le Lab_status ?
+        si c'est statique, on ne le met pas en instance mais au niveau classe => voir début plus haut
+        """
+
 
         # Parcourir les éléments et vérifier les correspondances avec le status actuel
-        for self._index, self._element in enumerate(self._status_data):
-            self._designation = self._element["designation"]
-            self._colonne_2 = "X" if (self._status == 0 and self._index == 0) else ""
-            print(f"Insertion : {self._designation}, Colonne 2 : {self._colonne_2}")
+        for index, element in enumerate(self._status_data):
+            designation = element[0]  # il faut simplifier
+            colonne_2 = "X" if (status == 0 and index == 0) else ""
+            print(f"Insertion : {designation}, Colonne 2 : {colonne_2}")
 
             # Insérer dans le TreeView
             if self._treeview:
-                self._treeview.insert("", tk.END, values=(self._designation, self._colonne_2))
+                self._treeview.insert("", tk.END, values=(designation, colonne_2))
             else:
                 print("TreeView non initialisé.")
 # *************************************** FIN DE LA FENETRE STATUS *****************************************************
@@ -164,6 +176,8 @@ class MainWindow:
         self._can_interface = None
         self._reader = None
         self.fichier_chemin = None
+        self.result = False
+        self._FenetreStatus = None
 
         # créé l'interface avec le CAN
         try:
@@ -258,20 +272,22 @@ class MainWindow:
         print("Bouton cliqué ! Voici un programme d'ouverture.")
 
         # Exécution de la fonction OPEN
-        self._can_interface = WindowsUSBCANInterface()  # Ca devrait disparaitre ???? car défini sur le constructeur
+        # self._can_interface = WindowsUSBCANInterface()  # Ca devrait disparaitre ???? car défini sur le constructeur
 
         # Appelle cette fonction de manière explicite
-        self._handle = self._can_interface.open(CAN_BAUD_250K,CANUSB_ACCEPTANCE_MASK_ALL,CANUSB_ACCEPTANCE_MASK_ALL,CANUSB_FLAG_TIMESTAMP)
+        #  Le handle ne sert à rien et il ne faut pas que la feb^tre le connaisse
+        # pas besoin de mettre les valeurs par défaut
+        # self._handle = self._can_interface.open(CAN_BAUD_250K,CANUSB_ACCEPTANCE_MASK_ALL,CANUSB_ACCEPTANCE_MASK_ALL,CANUSB_FLAG_TIMESTAMP)
         
         # print(f"Résultat de l'appel : {self._handle}")
-
-        if self._handle:                 # Si c'est ouvert
-           self.disable_button_open()    # Met le bouton d'ouverture en disabled
-           self.enable_button_close()
-           self.enable_button_read()
-           print("C'est ouvert ...........")
-           self.result=True
-        else:
+        try:
+            self._can_interface.open() # les paramètres sont par défaut
+            self.disable_button_open()    # Met le bouton d'ouverture en disabled
+            self.enable_button_close()
+            self.enable_button_read()
+            print("C'est ouvert ...........")
+            self.result=True  # result sert à savoir si le open est OK, non ?
+        except CanError:
             print("PAS BON !!!")
 
     def on_stop_click(self):
@@ -314,7 +330,7 @@ class MainWindow:
             print("Checkbox décochée - Enregistrement désactivé")
 
     def on_close_click(self):
-        if self._handle is not None:
+        if self.result:
             self.enable_button_open()       # Active le bouton d'ouverture
             self.on_stop_click()            # Arrête la boucle
             self._can_interface.close()     # Ferme l'adaptateur
@@ -332,17 +348,17 @@ class MainWindow:
         )
 
     def initialize_status(self):
-        if not self._FentreStatus:
-            self._status = self._can_interface.status()
-            self._FentreStatus = FentreStatus(self._status)
+        if self._FenetreStatus is None:
+            status = self._can_interface.status()
+            self._FenetreStatus = FenetreStatus(status)
 
     def on_status_click(self):
         try:
-            if self._handle is not None:
+            if self.result:
                 self.initialize_status()
-                self._status = self._can_interface.status()  # Récupérer le statut actuel
-                print(f"Remplir TreeView avec le statut: {self._status}")
-                self._FentreStatus.remplir_treeview(self._status)  # Mettre à jour le TreeView
+                status = self._can_interface.status()  # Récupérer le statut actuel
+                print(f"Remplir TreeView avec le statut: {status}")
+                self._FentreStatus.remplir_treeview(status)  # Mettre à jour le TreeView
         except Exception as e:
             print(f"Erreur : {e}")
     # =================== FIN DES FONCTIONS ======================
