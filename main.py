@@ -1,13 +1,13 @@
 import tkinter as tk
-from tkinter import Checkbutton, BooleanVar,ttk, filedialog
+from tkinter import Checkbutton, BooleanVar, ttk, filedialog
 from threading import Thread
 from Package.CANUSB import CanMsg, WindowsUSBCANInterface, CanError
 from Package.constante import *
+
+
 # *************************** CLASSE D'ENREGISTREMENT ******************************************************************
 # ***********************************************************
 # Classe pour ouvrir un fichier prêt pour l'enregistrement.
-# Il serait mieux de metter le Thread sur la boucle de lecture
-# qu'on enregistre ou PAS.
 # ***********************************************************
 class CANUSBReader(Thread):
 
@@ -24,20 +24,20 @@ class CANUSBReader(Thread):
     def stop(self):
         self._stop_flag = True
 
-    # Ouvrir l'interface.
-    def start(self):    # C'est une fonction du Thread
+    # Lance le Thread qui s'occupe de faire Le Read avec Enrrgistrement et La convertion en NMEA 2000.
+    def start(self):  # C'est une fonction du Thread
         print("Lance la Thread")
         # Lance un Thread.
         super().start()
-    
-    # Ouvrir le fichier
+
+    # Ouvrir le fichier.
     def open_file(self, file):
         try:
             self._output_fd = open(file, "a")  # Créer le nouveau fichier
         except IOError as err:
             print(f"Erreur sur fichier {file}: {err}")
 
-    # Fermer le fichier
+    # Fermer le fichier.
     def close_file(self):
         if self._output_fd is not None:
             self._output_fd.close()
@@ -46,19 +46,21 @@ class CANUSBReader(Thread):
     # Sûr en cours sur le Thread. C'est une methode particulière liée au Thread.
     def run(self):
         count = 0
-        while not self._stop_flag: # Tant qu'on n'arrête pas ça tourne.
+        while not self._stop_flag:  # Tant qu'on n'arrête pas ça tourne.
             try:
-                msg = self._interface.read()    # Lit une trame.
-
-                # Si on a une trame d'arrivée.
-                if self._output_fd is not None: # Si on a une trame d'arrivée.
+                msg = self._interface.read()  # Lit une trame.
+                # Si on a un fichier à écrire
+                if self._output_fd is not None:
+                    # On écrit sur le fichier le CanMsg avec: TimeStamp, ID, Data. Il manque la longueur
                     self._output_fd.write(f"{msg.TimeStamp} {msg.Id:08X} {msg.data.hex(" ")}\n")
-                # Sinon on ne fait rien.
-                
+
+                # On continu sur NMEA 2000 *****************>>
+                # On utilisera le CanMsg avec ID, Len, Data
+
                 # Si on a le thread en cours   
                 if self._update_callback is not None:
                     self._update_callback(count, msg)
-                count += 1 # Compte le nombre de scutation
+                count += 1  # Compte le nombre de scutation
             except CanError as err:
                 print("Erreur CAN", err)
                 break
@@ -73,9 +75,11 @@ class CANUSBReader(Thread):
 # ******************************** FIN DE LA CLASS ENREGISTREMENT ******************************************************
 
 # ************************************ FENETRE DU STATUS ***************************************************************
-class FentreStatus:
-    def __init__(self,status):
-
+class FenetreStatus:
+    def __init__(self, status):
+        print("" + str(dir(self)))
+        self._treeview = None  # Déclare l'attribut dès le début
+        self.fermer = None
         self._colonne_2 = None
         self._status_data = None
         self._designation = None
@@ -83,28 +87,21 @@ class FentreStatus:
         self._lab_status = None
         self._index = None
         self._element = None
-        
+
         self._status = status
-        self._status = tk.Tk() # Crée une nouvelle fenêtre
-        self._status.title("Etats")
-        self._status.geometry("230x205")
+        # self._status = tk.Tk() # Crée une nouvelle fenêtre
+        # self._status.title("Etats")
 
+        self._fenetre_status = tk.Tk()  # Création de la fenêtre
+        self._fenetre_status.title("Etats")
+        self._fenetre_status.geometry("230x205")
 
-        # Utiliser la suppresion des instances de cette fenêtre sur fermeture
+                # Utiliser la suppresion des instances de cette fenêtre sur fermeture
         # Car il ne supporte pas de la regénéré au niveau du TreeView
-
-        """
-        def fermer(self):
-            print(f"Fermeture de la fenêtre avec le statut '{self._status}'...")
-            self._status.destroy()
-
-        self._status.protocol("WM_DELETE_WINDOW", self.fermer)  # Gestion de la fermeture
-        """
-
 
         # Créer un Treeview
         self._colonnes = ("Colonne 1", "Colonne 2")
-        self._treeview = ttk.Treeview(self._status, columns=self._colonnes, show="headings")
+        self._treeview = ttk.Treeview(self._fenetre_status, columns=self._colonnes, show="headings")
 
         # Définir les en-têtes des colonnes
         self._treeview.heading("Colonne 1", text="Etat")
@@ -118,9 +115,10 @@ class FentreStatus:
         self._treeview.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
         print("TreeView Installé")
 
-    def remplir_treeview(self,status):
+    def remplir_treeview(self, status):
+
         self._status = status
-        # Liste des erreurs possibles
+        # Liste des erreurs possibles définies dans une liste
         self._status_data = [
             {"designation": "Pas de défaut", "Lab_Status": CANSTATUS_NO_ERROR},
             {"designation": "Buffer de reception plein", "Lab_Status": CANSTATUS_RECEIVE_FIFO_FULL},
@@ -150,8 +148,8 @@ class MainWindow:
 
     # Fonction de creation de la fenêtre principale
     def __init__(self):
-
-        self._FentreStatus = None
+        # On initialise les instances (ce sont des variables locales qui sont disponibles sur toute la class.)
+        self._FenetreStatus = None
         self._status = None
         self._root = tk.Tk()
         self._root.title("LECTURE DES TRAMES EN TEMPS REEL")
@@ -160,10 +158,11 @@ class MainWindow:
         frame = tk.Frame(self._root)
         frame.place(x=50, y=100)
 
-        # On initialyse les variables
+
         self._can_interface = None
         self._reader = None
         self.fichier_chemin = None
+        self._handle = None
 
         # créé l'interface avec le CAN
         try:
@@ -171,8 +170,7 @@ class MainWindow:
         except CanError:
             raise
 
-        # =============== ALJOUT DES CONTROLES SUR LA FENETRE ===============================
-
+        # ====================== ALJOUT DES CONTROLES SUR LA FENETRE ===============================
         # Ajout d'un bouton OPEN et défini sa taille puis défini son emplacement
         self.button_open = tk.Button(self._root, text="Open", width=10, height=1, command=self.on_open_click)
         # button.pack(pady=20)
@@ -183,21 +181,22 @@ class MainWindow:
         self.button_read.place(x=10, y=80)
 
         # Ajout d'un bouton CLOSE et défini sa taille puis défini son emplacement
-        self.button_close = tk.Button(self._root, text="Close", width=10, height=1,  state='disabled',command=self.on_close_click)
+        self.button_close = tk.Button(self._root, text="Close", width=10, height=1, state='disabled',
+                                      command=self.on_close_click)
         self.button_close.place(x=100, y=40)
 
         self.button_stop = tk.Button(self._root, text="Arrêter", width=10, height=1, command=self.on_stop_click)
         self.button_stop.pack()
         self.button_stop.place(x=200, y=80)
-        
+
         # Ajouter un bouton pour ouvrir la fenêtre des états
         self.button_status = tk.Button(self._root, text="États", width=10, height=1, command=self.on_status_click)
         self.button_status.place(x=10, y=120)
-        
 
         # Ajput d'une CheckBox
         self.check_enr = BooleanVar()
-        check_enregistre = tk.Checkbutton(self._root, text="Enregistrer", variable=self.check_enr, command=self.on_checkbox_change)
+        check_enregistre = tk.Checkbutton(self._root, text="Enregistrer", variable=self.check_enr,
+                                          command=self.on_checkbox_change)
         check_enregistre.place(x=100, y=80)  # Coordonnées précises en pixels
 
         # Ajout un TreeView avec 3 colonnes
@@ -225,7 +224,6 @@ class MainWindow:
         self.label.place(x=5, y=10)
         # ====================== FIN DES CONTROLES ======================================
 
-
     # ========== FONCTIONS D'ACTIVATION ET DESACTIVATION DES BOUTONS ==========
     def disable_button_open(self):
         self.button_open['state'] = 'disabled'  # Désactive le bouton
@@ -250,6 +248,7 @@ class MainWindow:
 
     def enable_button_stop(self):
         self.button_stop['state'] = 'normal'  # Active le bouton
+
     # ======================= FIN D'ACTUALISATION DES BOUTONS =========================
 
     # =================== FONCTIONS DES CONTROLES SUR LA FENETRE ======================
@@ -258,38 +257,36 @@ class MainWindow:
         print("Bouton cliqué ! Voici un programme d'ouverture.")
 
         # Exécution de la fonction OPEN
-        self._can_interface = WindowsUSBCANInterface()  # Ca devrait disparaitre ???? car défini sur le constructeur
+        self._can_interface = WindowsUSBCANInterface()
 
         # Appelle cette fonction de manière explicite
-        self._handle = self._can_interface.open(CAN_BAUD_250K,CANUSB_ACCEPTANCE_MASK_ALL,CANUSB_ACCEPTANCE_MASK_ALL,CANUSB_FLAG_TIMESTAMP)
-        
-        # print(f"Résultat de l'appel : {self._handle}")
+        self._handle = self._can_interface.open(CAN_BAUD_250K, CANUSB_ACCEPTANCE_MASK_ALL, CANUSB_ACCEPTANCE_MASK_ALL,
+                                                CANUSB_FLAG_TIMESTAMP)
 
-        if self._handle:                 # Si c'est ouvert
-           self.disable_button_open()    # Met le bouton d'ouverture en disabled
-           self.enable_button_close()
-           self.enable_button_read()
-           print("C'est ouvert ...........")
-           self.result=True
+        print(f"Résultat de l'appel : {self._handle}")
+
+        if self._handle:  # Si c'est ouvert
+            self.disable_button_open()  # Met le bouton d'ouverture en disabled
+            self.enable_button_close()
+            self.enable_button_read()
+            print("C'est ouvert ...........")
         else:
             print("PAS BON !!!")
 
     def on_stop_click(self):
         # Met fin à la boucle
         if self._reader is not None:
-            self._reader.stop()             # Arrête la lecture
-            print ("Le read est arrêté")
+            self._reader.stop()  # Arrête la lecture
+            print("Le read est arrêté")
             self._reader = None
             self.enable_button_open()
             self.disable_button_close()
-            self.on_close_click()           # Ferme la laison
+            self.on_close_click()  # Ferme la laison
 
-
-
-    def on_read_click(self):    # Lit en temps réel
+    def on_read_click(self):  # Lit en temps réel
         print("Bouton cliqué ! Voici votre programme de lecture.")
 
-        self.disable_button_read()   # Desactive le bouton READ
+        self.disable_button_read()  # Desactive le bouton READ
         # Appelle la fonction de lecture en temps réel
         # CE N'EST PAS NORMAL D'ENREGITRER
         # CAR ON PEUT SIMPLEMENT LIRE LES TRAMES ET PAS LES ENREGISTRER
@@ -300,7 +297,7 @@ class MainWindow:
 
     # Fonction en callback. Appelé par CANUSBReader
     def update_read(self, compteur, msg):
-        self.label.config(text=f"Compteur : {compteur}") # Affiche le nombre de trames reçues
+        self.label.config(text=f"Compteur : {compteur}")  # Affiche le nombre de scrutations du Thread.
         self._root.update()
 
     def on_checkbox_change(self):
@@ -315,13 +312,10 @@ class MainWindow:
 
     def on_close_click(self):
         if self._handle is not None:
-            self.enable_button_open()       # Active le bouton d'ouverture
-            self.on_stop_click()            # Arrête la boucle
-            self._can_interface.close()     # Ferme l'adaptateur
+            self.enable_button_open()  # Active le bouton d'ouverture
+            self.on_stop_click()  # Arrête la boucle
+            self._can_interface.close()  # Ferme l'adaptateur
             self.disable_button_close()
-
-
-        result = False
 
     def choix_fichier(self):
         # Ouvrir une boîte de dialogue pour sélectionner un fichier
@@ -331,31 +325,28 @@ class MainWindow:
             defaultextension=".txt"
         )
 
-    def initialize_status(self):
-        if not self._FentreStatus:
-            self._status = self._can_interface.status()
-            self._FentreStatus = FentreStatus(self._status)
-
     def on_status_click(self):
         try:
-            if self._handle is not None:
-                self.initialize_status()
-                self._status = self._can_interface.status()  # Récupérer le statut actuel
-                print(f"Remplir TreeView avec le statut: {self._status}")
-                self._FentreStatus.remplir_treeview(self._status)  # Mettre à jour le TreeView
+            self._FenetreStatus = None  # Initialise la fenêtre, car elle existe toujours dans l'instance de la class MainWindow.
+                                        # Sans cela une fois qu'elle est fermée, on ne peut la ré-ouvrir.
+            if not self._FenetreStatus:
+                self._status = self._can_interface.status()
+                self._FenetreStatus = FenetreStatus(self._status)
+            print(f"Remplir TreeView avec le statut: {self._status}")
+            self._FenetreStatus.remplir_treeview(self._status)  # Mettre à jour la TreeView
         except Exception as e:
-            print(f"Erreur : {e}")
+            print(f"Errself._FenetreStatus.remplir_treeview(self._status)eur : {e}")
     # =================== FIN DES FONCTIONS ======================
-# **********************************************************************************************************************
-    
+
+    # **************************************** FIN DE LA CLASS MainWondows *********************************************
+
     # Cette fonction s'éxécute sur le lancement qui est défini ci aprés, suit le principe des déclarations.
     def open(self):
         self._root.mainloop()
+
 
 # Lance la Mainwindow
 if __name__ == "__main__":
     main_window = MainWindow()
     main_window.open()
-
-# ======================================================================================================================
-
+# ============================================  FIN DU PROGRAMME =======================================================

@@ -56,6 +56,7 @@ class WindowsUSBCANInterface:
         if self._handle is None:
            raise CanError("Channel not open")
         msg = CanMsg()
+
         result = self._dll.canusb_Read(self._handle, ctypes.byref(msg))
         if result:
             return msg  # Retourne le CanMsg dont on aura besoin pour l'enregistrer
