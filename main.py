@@ -58,7 +58,7 @@ class CANUSBReader(Thread):
 
                 # Voir la boucle dans la class WindowsUSBCANInterface dans CANUSB.
                 self.msg = self._interface.read(self._stop_flag)  # Lit une trame, quand il y a en une, donc, on attend.
-                # print("ca boucle" + str(self.msg.ID))
+                print("ca boucle" + str(self.msg.ID))
 
                 # Si on a le fichier ouvert. On enregistre quand il y a un msg.
                 if self._output_fd is not None:
