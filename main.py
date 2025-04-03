@@ -369,7 +369,7 @@ class MainWindow:
                         print("Fichier :" + str(self.fichier_chemin))
                         # Incrit le fichier sur l'écran.
                         self.lab_fic.config(text=f"Fichier : {self.fichier_chemin}")
-            else:
+            else: # Il faut que je réfléchisse.***************************************** >>>>
                 # Ouvrir une boîte de dialogue pour sélectionner un fichier
                 self.fichier_chemin = filedialog.asksaveasfilename(
                     title="Choisissez le fichier à enregistrer",
