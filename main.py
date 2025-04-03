@@ -7,7 +7,7 @@ from Package.constante import *
 
 # *************************** CLASSE D'ENREGISTREMENT ******************************************************************
 # ***********************************************************
-# Classe pour ouvrir un fichier prêt pour l'enregistrement.
+# Classe pour le lancement du Read et l'enregistrement.
 # ***********************************************************
 class CANUSBReader(Thread):
 
@@ -150,6 +150,9 @@ class MainWindow:
         self._root = tk.Tk()
         self._root.title("LECTURE DES TRAMES EN TEMPS REEL")
         self._root.geometry("600x386")
+
+        # Associer une action à la fermeture de la fenêtre
+        self._root.protocol("WM_DELETE_WINDOW", self.fermer_MainWindow)
 
         frame = tk.Frame(self._root)
         frame.place(x=50, y=100)
@@ -348,41 +351,51 @@ class MainWindow:
             # self.fichier_chemin = None
             print("Checkbox décochée - Enregistrement désactivé")
 
+    def ouvre_fichier(self):
+        # Ouvrir une boîte de dialogue pour sélectionner un fichier
+        self.fichier_chemin = filedialog.asksaveasfilename(
+            title="Choisissez le fichier à enregistrer",
+            filetypes=(("Fichiers texte", "*.txt"), ("Tous les fichiers", "*.*")),
+            defaultextension=".txt")
+
     def on_fichier_click(self):
         try:
             if self.fichier_chemin is not None:
-                # Afficher la boîte de dialogue
-                # reponse = messagebox.askyesno("OUVRIR UN FICHIER", "Voulez-vous examiner le fichier ?,\nSinon en créer un autre")
+                # Afficher la boîte de dialogue YES NO CANCEL
                 reponse = messagebox.askyesnocancel("OUVRIR UN FICHIER", "Voulez-vous examiner le fichier ?,\nSinon en créer un autre")
-                # Gérer la réponse
+
                 if reponse is True:
-                    # Affiche le notebloc
+                    # Affiche le fichier dans la notebloc
                     subprocess.Popen(["notepad", self.fichier_chemin])
                 elif reponse is False:
-                    print("L'utilisateur a choisi de créer un autre fichier.")
-                    # Ouvrir une boîte de dialogue pour sélectionner un fichier
-                    self.fichier_chemin = filedialog.asksaveasfilename(
-                        title="Choisissez le fichier à enregistrer",
-                        filetypes=(("Fichiers texte", "*.txt"), ("Tous les fichiers", "*.*")),
-                        defaultextension=".txt")
+                    self.ouvre_fichier()
                     if self.fichier_chemin != "":
                         print("Fichier :" + str(self.fichier_chemin))
                         # Incrit le fichier sur l'écran.
                         self.lab_fic.config(text=f"Fichier : {self.fichier_chemin}")
-            else: # Il faut que je réfléchisse.***************************************** >>>>
-                # Ouvrir une boîte de dialogue pour sélectionner un fichier
-                self.fichier_chemin = filedialog.asksaveasfilename(
-                    title="Choisissez le fichier à enregistrer",
-                    filetypes=(("Fichiers texte", "*.txt"), ("Tous les fichiers", "*.*")),
-                    defaultextension=".txt")
+            else:
+                # Ouvrir la boîte de dialogue pour sélectionner un fichier
+                self.ouvre_fichier()
                 if self.fichier_chemin == "":
                     self.fichier_chemin= None  # il y a une différence ici
                 else:
                     print("Fichier :" + str(self.fichier_chemin))
                     # Incrit le fichier sur l'écran.
                     self.lab_fic.config(text=f"Fichier : {self.fichier_chemin}")
+
         except Exception as e:
             print(f" : {e}")
+
+    def fermer_MainWindow(self):
+        if self._reader is not None:
+            self._reader.stop()  # Arrête la lecture
+            print("Le read est arrêté")
+            self._reader = None
+
+        if self._handle is not None:
+            self._can_interface.close()  # Ferme l'adaptateur
+
+        self._root.destroy()  # Fermer la fenêtre
     # =================== FIN DES FONCTIONS ======================
 
     # **************************************** FIN DE LA CLASS MainWondow *********************************************
@@ -397,3 +410,4 @@ if __name__ == "__main__":
     main_window = MainWindow()
     main_window.open()
 # ============================================  FIN DU PROGRAMME =======================================================
+                                            # En fait, c'est de début
