@@ -385,7 +385,7 @@ class MainWindow:
             print(f" : {e}")
     # =================== FIN DES FONCTIONS ======================
 
-    # **************************************** FIN DE LA CLASS MainWondows *********************************************
+    # **************************************** FIN DE LA CLASS MainWondow *********************************************
 
     # Cette fonction s'éxécute sur le lancement qui est défini ci aprés, suit le principe des déclarations.
     def open(self):
