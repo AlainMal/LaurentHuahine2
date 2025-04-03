@@ -92,27 +92,12 @@ class CANUSBReader(Thread):
 # ************************************ FENETRE DU STATUS ***************************************************************
 class FenetreStatus:
     def __init__(self, status):
-        print("" + str(dir(self)))
-        self._treeview = None  # Déclare l'attribut dès le début
-        self.fermer = None
-        self._colonne_2 = None
-        self._status_data = None
-        self._designation = None
-        self._treeview = None
-        self._lab_status = None
-        self._index = None
-        self._element = None
-
         self._status = status
-        # self._status = tk.Tk() # Crée une nouvelle fenêtre
-        # self._status.title("Etats")
+        self._treeview = None
 
         self._fenetre_status = tk.Tk()  # Création de la fenêtre
         self._fenetre_status.title("Etats")
         self._fenetre_status.geometry("230x205")
-
-                # Utiliser la suppresion des instances de cette fenêtre sur fermeture
-        # Car il ne supporte pas de la regénéré au niveau du TreeView
 
         # Créer un Treeview
         self._colonnes = ("Colonne 1", "Colonne 2")
@@ -131,29 +116,26 @@ class FenetreStatus:
         print("TreeView Installé")
 
     def remplir_treeview(self, status):
+        # Liste des différents défauts
+        status_data = (
+            ("Pas de défaut", "CANSTATUS_NO_ERROR"),
+            ("Buffer de réception plein", "CANSTATUS_RECEIVE_FIFO_FULL"),
+            ("Buffer de transmission plein", "CANSTATUS_TRANSMIT_FIFO_FULL"),
+            ( "Avertissement erreur", "CANSTATUS_ERROR_WARNING"),
+            ("Surcharge des Données", "CANSTATUS_DATA_OVERRUN"),
+            ("Erreur passive", "CANSTATUS_ERROR_PASSIVE"),
+            ("Défaut d'arbitrage", "CANSTATUS_ARBITRATION_LOST"),
+            ("Erreur sur le bus", "CANSTATUS_BUS_ERROR")
+        )
 
-        self._status = status
-        # Liste des erreurs possibles définies dans une liste
-        self._status_data = [
-            {"designation": "Pas de défaut", "Lab_Status": CANSTATUS_NO_ERROR},
-            {"designation": "Buffer de reception plein", "Lab_Status": CANSTATUS_RECEIVE_FIFO_FULL},
-            {"designation": "Buffer de transmission plein", "Lab_Status": CANSTATUS_TRANSMIT_FIFO_FULL},
-            {"designation": "Avertissement erreur", "Lab_Status": CANSTATUS_ERROR_WARNING},
-            {"designation": "Surcharge des Données", "Lab_Status": CANSTATUS_DATA_OVERRUN},
-            {"designation": "Erreur passive", "Lab_Status": CANSTATUS_ERROR_PASSIVE},
-            {"designation": "Défaut d'arbitrage", "Lab_Status": CANSTATUS_ARBITRATION_LOST},
-            {"designation": "Erreur sur le bus", "Lab_Status": CANSTATUS_BUS_ERROR},
-        ]
-
-        # Parcourir les éléments et vérifier les correspondances avec le status actuel
-        for self._index, self._element in enumerate(self._status_data):
-            self._designation = self._element["designation"]
-            self._colonne_2 = "X" if (self._status == 0 and self._index == 0) else ""
-            print(f"Insertion : {self._designation}, Colonne 2 : {self._colonne_2}")
+        # Parcourir les données et insérer dans le TreeView
+        for index, element in enumerate(status_data):
+            designation = element[0]
+            colonne_2 = "X" if (self._status == 0 and index == 0) else ""
 
             # Insérer dans le TreeView
             if self._treeview:
-                self._treeview.insert("", tk.END, values=(self._designation, self._colonne_2))
+                self._treeview.insert("", tk.END, values=(designation, colonne_2))
             else:
                 print("TreeView non initialisé.")
 # *************************************** FIN DE LA FENETRE STATUS *****************************************************
@@ -165,10 +147,6 @@ class MainWindow:
     lab_fic = None
 
     def __init__(self):
-        # On initialise les instances (ce sont des variables locales qui sont disponibles sur toute la class.)
-
-        self._FenetreStatus = None
-        self._status = None
         self._root = tk.Tk()
         self._root.title("LECTURE DES TRAMES EN TEMPS REEL")
         self._root.geometry("600x386")
@@ -176,11 +154,13 @@ class MainWindow:
         frame = tk.Frame(self._root)
         frame.place(x=50, y=100)
 
-
         self._can_interface = None
         self._reader = None
         self.fichier_chemin = None
         self._handle = None
+
+        self._FenetreStatus = None
+        self._status = None
 
         # créé l'interface avec le CAN
         try:
@@ -195,17 +175,13 @@ class MainWindow:
         self.button_open.place(x=10, y=40)
 
         # Ajout d'un bouton READ et défini sa taille puis défini son emplacement
-        self.button_read = tk.Button(self._root, text="Read", width=10, height=1, command=self.on_read_click)
+        self.button_read = tk.Button(self._root, text="Read", width=10, height=1,state='disabled', command=self.on_read_click)
         self.button_read.place(x=10, y=80)
 
         # Ajout d'un bouton CLOSE et défini sa taille puis défini son emplacement
         self.button_close = tk.Button(self._root, text="Close", width=10, height=1, state='disabled',
                                       command=self.on_close_click)
         self.button_close.place(x=100, y=40)
-
-        self.button_stop = tk.Button(self._root, text="Arrêter", width=10, height=1, command=self.on_stop_click)
-        self.button_stop.pack()
-        self.button_stop.place(x=200, y=80)
 
         # Ajouter un bouton pour ouvrir la fenêtre des états
         self.button_status = tk.Button(self._root, text="États", width=10, height=1, command=self.on_status_click)
@@ -214,6 +190,10 @@ class MainWindow:
         # Ajouter un bouton pour afficher le fichier .txt.
         self.button_fichier = tk.Button(self._root, text="..", width=2, height=1, command=self.on_fichier_click)
         self.button_fichier.place(x=10, y=160)
+
+        # Ajouter un bouton pour afficher le fichier .txt.
+        self.button_stop = tk.Button(self._root, text="Arrêter ..", width=10, height=1,state='disabled', command=self.on_stop_click)
+        self.button_stop.place(x=200, y=80)
 
         # Ajput d'une CheckBox
         self.check_enr = BooleanVar()
@@ -249,9 +229,6 @@ class MainWindow:
         self.lab_fic = tk.Label(self._root, text="Fichier en cours", width=40, anchor='w')
         self.lab_fic.place(x=40, y=160)
 
-        # Ajouter un label qui affiche le nombre de trames reçues
-        self.lab_trame = tk.Label(self._root, text="nombre de trames", width=20, anchor='w')
-        self.lab_trame.place(x=100, y=240)
         # ====================== FIN DES CONTROLES ======================================
 
     # ========== FONCTIONS D'ACTIVATION ET DESACTIVATION DES BOUTONS ==========
@@ -278,7 +255,6 @@ class MainWindow:
 
     def enable_button_stop(self):
         self.button_stop['state'] = 'normal'  # Active le bouton
-
     # ======================= FIN D'ACTUALISATION DES BOUTONS =========================
 
     # =================== FONCTIONS DES CONTROLES SUR LA FENETRE ======================
@@ -295,32 +271,28 @@ class MainWindow:
 
         print(f"Résultat de l'appel : {self._handle}")
 
-        if self._handle:  # Si c'est ouvert
+        if self._handle:  # Si c'est l'adaptateur est ouvert.
             self.disable_button_open()  # Met le bouton d'ouverture en disabled
             self.enable_button_close()
             self.enable_button_read()
             print("C'est ouvert ...........")
         else:
             print("PAS BON !!!")
+            messagebox.showinfo("OUVERTURE DE L'ADAPTATEUR", "Vérifiez que vous êtes bien raccordé")
 
     def on_close_click(self):
         if self._handle is not None:
             self._can_interface.close()  # Ferme l'adaptateur
 
             self.enable_button_open()  # Active le bouton d'ouverture
-            self.on_stop_click()  # Arrête la boucle
             self.disable_button_close()
+            self.disable_button_read()
+            self.disable_button_stop()
 
-    def on_stop_click(self):
-        # Met fin à la boucle
         if self._reader is not None:
             self._reader.stop()  # Arrête la lecture
             print("Le read est arrêté")
-
             self._reader = None
-            self.enable_button_open()
-            self.disable_button_close()
-            self.on_close_click()  # Ferme la laison
 
     def on_read_click(self):  # Lit en temps réel
         print("Bouton cliqué ! Voici votre programme de lecture.")
@@ -331,51 +303,85 @@ class MainWindow:
 
             # Lance le Theard.
             self._reader.start()
+            self.enable_button_stop()
 
     # Fonction en callback. Appelé par CANUSBReader
     def update_read(self, compteur, msg):
         self.label.config(text=f"Compteur : {compteur}")  # Affiche le nombre de trames reçues du Thread.
         self._root.update()
 
-    def on_checkbox_change(self):
-        if self.check_enr.get():  # Si la case est cochée
-            print("Checkbox cochée - Enregistrement activé")
-            # Pour récupérer le chemin et créer un nouveau fichier
-            self.choix_fichier()
-
-        else:  # Si la case est décochée
-            self.fichier_chemin = None
-            print("Checkbox décochée - Enregistrement désactivé")
-
-    def choix_fichier(self):
-        # Ouvrir une boîte de dialogue pour sélectionner un fichier
-        self.fichier_chemin = filedialog.asksaveasfilename(
-            title="Choisissez le fichier à enregistrer",
-            filetypes=(("Fichiers texte", "*.txt"), ("Tous les fichiers", "*.*")),
-            defaultextension=".txt"
-        )
-        print("Fichier :" + str(self.fichier_chemin))
-        # Incrit le fichier sur l'écran.
-        self.lab_fic.config(text=f"Fichier : {self.fichier_chemin}")
+    def on_stop_click(self):
+        if self._reader is not None:
+            self._reader.stop()  # Arrête la lecture
+            print("Le read est arrêté")
+            self._reader = None
+            self.enable_button_read()
+            self.disable_button_stop()
 
     def on_status_click(self):
         try:
-            self._FenetreStatus = None  # Initialise la fenêtre, car elle existe toujours dans l'instance de la class MainWindow.
-                                        # Sans cela une fois qu'elle est fermée, on ne peut la ré-ouvrir.
+            self._FenetreStatus = None
             if not self._FenetreStatus:
                 self._status = self._can_interface.status()
                 self._FenetreStatus = FenetreStatus(self._status)
+
             print(f"Remplir TreeView avec le statut: {self._status}")
             self._FenetreStatus.remplir_treeview(self._status)  # Mettre à jour la TreeView
         except Exception as e:
             print(f"Errself._FenetreStatus.remplir_treeview(self._status)eur : {e}")
 
+    def choix_fichier(self):
+        if self.fichier_chemin != "":
+            print("Fichier :" + str(self.fichier_chemin))
+            # Incrit le fichier sur l'écran.
+            self.lab_fic.config(text=f"Fichier : {self.fichier_chemin}")
+        else:
+            self.check_enr.set(False)
+            self.fichier_chemin = None
+
+    def on_checkbox_change(self):
+        if self.check_enr.get():  # Si la case est cochée
+            print("Checkbox cochée - Enregistrement activé")
+            # Pour récupérer le chemin et créer un nouveau fichier
+            self.choix_fichier()
+        else:
+            # self.fichier_chemin = None
+            print("Checkbox décochée - Enregistrement désactivé")
+
     def on_fichier_click(self):
         try:
-            subprocess.Popen(["notepad", self.fichier_chemin])
+            if self.fichier_chemin is not None:
+                # Afficher la boîte de dialogue
+                # reponse = messagebox.askyesno("OUVRIR UN FICHIER", "Voulez-vous examiner le fichier ?,\nSinon en créer un autre")
+                reponse = messagebox.askyesnocancel("OUVRIR UN FICHIER", "Voulez-vous examiner le fichier ?,\nSinon en créer un autre")
+                # Gérer la réponse
+                if reponse is True:
+                    # Affiche le notebloc
+                    subprocess.Popen(["notepad", self.fichier_chemin])
+                elif reponse is False:
+                    print("L'utilisateur a choisi de créer un autre fichier.")
+                    # Ouvrir une boîte de dialogue pour sélectionner un fichier
+                    self.fichier_chemin = filedialog.asksaveasfilename(
+                        title="Choisissez le fichier à enregistrer",
+                        filetypes=(("Fichiers texte", "*.txt"), ("Tous les fichiers", "*.*")),
+                        defaultextension=".txt")
+                    if self.fichier_chemin != "":
+                        print("Fichier :" + str(self.fichier_chemin))
+                        # Incrit le fichier sur l'écran.
+                        self.lab_fic.config(text=f"Fichier : {self.fichier_chemin}")
+            else:
+                # Ouvrir une boîte de dialogue pour sélectionner un fichier
+                self.fichier_chemin = filedialog.asksaveasfilename(
+                    title="Choisissez le fichier à enregistrer",
+                    filetypes=(("Fichiers texte", "*.txt"), ("Tous les fichiers", "*.*")),
+                    defaultextension=".txt")
+                if self.fichier_chemin == "":
+                    self.fichier_chemin= None  # il y a une différence ici
+                else:
+                    print("Fichier :" + str(self.fichier_chemin))
+                    # Incrit le fichier sur l'écran.
+                    self.lab_fic.config(text=f"Fichier : {self.fichier_chemin}")
         except Exception as e:
-            # Afficher la boîte de message
-            messagebox.showinfo("FICHIER EN COURS", "Veuillez cliquer sur la case à cocher")
             print(f" : {e}")
     # =================== FIN DES FONCTIONS ======================
 
