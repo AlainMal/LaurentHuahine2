@@ -14,7 +14,7 @@ class CANUSBReader(Thread):
     def __init__(self, interface, update_callback, file):
         super().__init__()
         self.msg = CanMsg()
-        self._datas = None
+        self._datas = ""
         self._interface = interface
         self._output_fd = None
         self._stop_flag = False
@@ -57,19 +57,19 @@ class CANUSBReader(Thread):
                     self.stop()
 
                 # Voir la boucle dans la class WindowsUSBCANInterface dans CANUSB.
-                self.msg = self._interface.read(self._stop_flag)  # Lit une trame, quand il y a en une. Donc, on attend.
-                print("ca boucle")
+                self.msg = self._interface.read(self._stop_flag)  # Lit une trame, quand il y a en une, donc, on attend.
+                # print("ca boucle" + str(self.msg.ID))
 
                 # Si on a le fichier ouvert. On enregistre quand il y a un msg.
                 if self._output_fd is not None:
-
-                    # On a défini les octets dans datas.
+                    self._datas=""
+                    # On défini les octets dans _datas.
                     for i in range(self.msg.len):
                         # On commence par un espace, car ça fini par le dernier octet.
-                        self._datas += " " + hex(self.msg.data[i])
+                        self._datas += " " + format(self.msg.data[i], "02X") # hex(self.msg.data[i])
 
                     # On ne met pas d'espace entre len et datas, voir self._datas ci-dessus.
-                    self._output_fd.write(f"{self.msg.TimeStamp} {self.msg.Id:08X} {self.msg.len:08X}{self.msg.data}\n")
+                    self._output_fd.write(f"{self.msg.TimeStamp} {self.msg.ID:08X} {self.msg.len:08X}{self._datas}\n")
 
                 # Si on a le thread en cours, On renvoie la valeur du count
                 if self._update_callback is not None:
