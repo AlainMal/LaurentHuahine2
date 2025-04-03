@@ -18,7 +18,9 @@ class CanError(Exception):
 # Défini les fonctions de la dll.
 class WindowsUSBCANInterface:
 
-    def __init__(self):
+    def __init__(self, stop_flag):
+        self.msg = None
+        self._stop_flag = stop_flag
     # ======================================================================
     # Charger la DLL
         try:
@@ -40,9 +42,9 @@ class WindowsUSBCANInterface:
         # Fonction STATUS
         self._dll.canusb_Status.restype = c_int
         self._dll.canusb_Read.restype = c_int
-       
+
+
     # Fonction d'ouverture de l'adaptateur. Cette fonction est appelé par le bouton "OPEN"
-    # Tous les paramétres sont définis par défaut ????
     def open(self, bitrate=CAN_BAUD_250K, acceptance_code=CANUSB_ACCEPTANCE_CODE_ALL, acceptance_mask=CANUSB_ACCEPTANCE_MASK_ALL, flags=CANUSB_FLAG_TIMESTAMP):
         # Ouvre l'adapateur par l'instance
         self._handle = self._dll.canusb_Open(None, bitrate, acceptance_code, acceptance_mask, flags)
@@ -52,16 +54,25 @@ class WindowsUSBCANInterface:
             return self._handle     # Retourne le handle dont on a besoin pour savoir si c'est ouvert
 
     # Fonction de lecture
-    def read(self) -> CanMsg:       # Retourne un pointeur sur le CanMsg
+    def read(self, stop_flag) -> CanMsg:       # Retourne un pointeur sur le CanMsg
         if self._handle is None:
            raise CanError("Channel not open")
-        msg = CanMsg()
+        self.msg = CanMsg()
 
-        result = self._dll.canusb_Read(self._handle, ctypes.byref(msg))
-        if result:
-            return msg  # Retourne le CanMsg dont on aura besoin pour l'enregistrer
-        else:
-            raise CanError("Erreur sur lecture CAN")
+        # On fait une boucle le temps qu'on n'a pas reçue le msg.
+        while not stop_flag:
+            if self._handle is None:    # C'est parque la boucle continue alors qu'on n'a plus de Handle.
+                self._handle = 0        # Donc, on met le Handle avec un int.
+            self.result = self._dll.canusb_Read(self._handle, ctypes.byref(self.msg))
+
+            # On sort si le result=1.
+            if self.result == 1:
+                break
+
+        # Une fois qu'on a un message.
+        return self.msg  # Retourne le CanMsg dont on aura besoin pour l'enregistrer
+
+            # raise CanError("Erreur sur lecture CAN")
     
     # Fonction de fermeture de l'adaptateur.
     def close(self):
