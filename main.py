@@ -1,5 +1,4 @@
-import time
-import tkinter as tk
+
 import subprocess
 from tkinter import BooleanVar, ttk, filedialog, messagebox
 from threading import Thread
@@ -16,6 +15,7 @@ class CANUSBReader(Thread):
 
     def __init__(self, interface, update_callback, file):
         super().__init__()
+        self._resultat = None
         self.tuple_id = None
         self._pgn = None
         self._msg = CanMsg()
@@ -69,13 +69,20 @@ class CANUSBReader(Thread):
                 # Voir la boucle dans la class WindowsUSBCANInterface dans CANUSB.
                 self._msg = self._interface.read(self._stop_flag )  # Lit une trame, quand il y a en une, donc on attend.
 
-            # ********** C'EST ICI QUE L'ON MET L'INTERPRETEUR À QUI ON ENVOI LE MSG *****************
-            #
-            #      Il retourne un tuple contenant le PGN, SOURCE, DESTINATION et PRIORITE
-
+            # *********************************************************************************************
+            #                    C'EST ICI QUE L'ON MET L'INTERPRETEUR À QUI ON ENVOI LE MSG
+            # *********************************************************************************************
+                # Appel la fonction qui renvoi un tuple sur l'ID, cette fonction doit disparaitre.
                 self.tuple_id = self._nmea2000.id(self._msg)
+                
+                # Appel la fonction qui retourne le tuple de tous les résultats
+                self._resultat = self._nmea2000.tuple_octets(self._msg)
 
-            # ****************************************************************************************
+                # Un petit essai
+                self._resultat[2]="essai du PGN3"
+
+                # Il manque encore la Méthode qui envoi sur la fenêtre FenetreAppercu.
+            # **********************************************************************************************
 
                 # Si on a le fichier ouvert. On enregistre quand il y a un msg.
                 if self._output_fd is not None:
@@ -416,13 +423,14 @@ class MainWindow:
     # Méthode appelée sur fermeture de la fenêtre principale"
     def fermer_MainWindow(self):
         self.on_close_click()
-        messagebox.showinfo("SORTIR","A la prochaine !!!")
+        
+        messagebox.showinfo("SORTIR","A la prochaine :)")
         self._root.destroy()  # Fermer la fenêtre
     # =================== FIN DES METHODES ======================
 
     # **************************************** FIN DE LA CLASS MainWondow *********************************************
 
-    # Cette fonction s'éxécute sur le lancement qui est défini ci aprés, suit le principe des déclarations.
+    # Cette fonction s'éxécute sur le lancement qui est défini ci aprés.
     def open(self):
         self._root.protocol("WM_DELETE_WINDOW", self.fermer_MainWindow)
         self._root.mainloop()

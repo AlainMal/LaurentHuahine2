@@ -62,8 +62,8 @@ class NMEA2000:
     # ================================== FIN DES METHODES POUR L'ID ====================================================
 
     # ========================== Méthodes de récupération des valeurs des octets =======================================
-    def octets(self,msg):
-        match self._pgn:
+    def octets(self,pgn):
+        match pgn:
             case 130306:
                 self._valeurChoisie1 = (msg.data[2] << 8 | msg.data[1]) * 0.01 * 1.94384449
                 self._pgn1 = "Noeuds du Vent"
@@ -213,7 +213,15 @@ class NMEA2000:
             case _:
                 self._pgn1 = "<PGN inconnu sur cette version>"
 
+        return self._pgn1, self._pgn2, self._pgn3, self._valeurChoisie1, self._valeurChoisie2, self._valeurChoisie3, self._valeurChoisieTab
 
+    # Méthode qui retourne le tuple des octets.
+    def tuple_octets(self,msg):
+        # Appel la méthode qui récupère le PGN
+        pgn = self.pgn(msg)
+
+        # Retourne le tuple des octets définis à travers de la méthode octets(pgn).
+        return self.octets(pgn)
 
 
 
