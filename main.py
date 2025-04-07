@@ -6,6 +6,7 @@ from threading import Thread
 from Package.CANUSB import  WindowsUSBCANInterface, CanError
 from Package.constante import *
 from Package.NMEA_2000 import *
+from Package.VoirResult import *
 
 # *************************** CLASSE D'ENREGISTREMENT ******************************************************************
 # ***********************************************************
@@ -212,6 +213,10 @@ class MainWindow:
         self.button_stop = tk.Button(self._root, text="Arrêter", width=10, height=1,state='disabled', command=self.on_stop_click)
         self.button_stop.place(x=200, y=80)
 
+        # Ajouter un bouton pour afficher la fenêtre "Apperçu"
+        self.button_voir = tk.Button(self._root, text="Voir ...", width=10, height=1, state='normal', command=self.on_voir_click)
+        self.button_voir.place(x=100, y=340)
+
         # Ajouter un label qui affiche le PGN en cours
         self.lab_pgn = tk.Label(self._root, text="PGN en cours", width=40, anchor='w')
         self.lab_pgn.place(x=100, y=220)
@@ -400,6 +405,13 @@ class MainWindow:
 
         except Exception as e:
             print(f" : {e}")
+
+    # Méthode pour afficher sur une fenêtre qui montre les résultats.
+    def on_voir_click(self):
+        self._FenetreAppercu = None
+        if not self._FenetreAppercu:
+            self._FenetreAppercu = FenetreAppercu()
+
 
     # Méthode appelée sur fermeture de la fenêtre principale"
     def fermer_MainWindow(self):
