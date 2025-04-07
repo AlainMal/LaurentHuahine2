@@ -1,3 +1,4 @@
+import time
 import tkinter as tk
 import subprocess
 from tkinter import BooleanVar, ttk, filedialog, messagebox
@@ -41,6 +42,7 @@ class CANUSBReader(Thread):
         print("Lance la Thread")
         # Lance un Thread.
         super().start()
+        print("Le Thread est lancé")
 
     # Ouvrir le fichier
     def open_file(self, file):
@@ -164,7 +166,7 @@ class MainWindow:
         self._root.geometry("290x386")
 
         # Associer une action à la fermeture de la fenêtre
-        self._root.protocol("WM_DELETE_WINDOW", self.fermer_MainWindow)
+        # self._root.protocol("WM_DELETE_WINDOW", self.fermer_MainWindow)
 
         frame = tk.Frame(self._root)
         frame.place(x=50, y=100)
@@ -291,16 +293,16 @@ class MainWindow:
             messagebox.showinfo("OUVERTURE DE L'ADAPTATEUR", "Vérifiez que vous êtes bien raccordé")
 
     def on_close_click(self):
-        if self._handle is not None:
-            self._can_interface.close()  # Ferme l'adaptateur
-
-            self.enable_button_open()  # Active le bouton d'ouverture
-            self.disable_button_close()
-            self.disable_button_read()
-            self.disable_button_stop()
-
         if self._reader is not None:
+            if self._handle is not None:
+                self._can_interface.close()  # Ferme l'adaptateur
+                self.enable_button_open()  # Active le bouton d'ouverture
+                self.disable_button_close()
+                self.disable_button_read()
+                self.disable_button_stop()
+
             self._reader.stop()  # Arrête la lecture
+            # self._reader.join()
             print("Le read est arrêté")
             self._reader = None
 
@@ -315,7 +317,7 @@ class MainWindow:
             self._reader.start()
             self.enable_button_stop()
 
-    # Fonction en callback. Appelé par CANUSBReader
+    # Fonction en callback. Appelé par la classe CANUSBReader
     def update_read(self, compteur, msg, tuple):
         self.label.config(text=f"Compteur : {compteur}")  # Affiche le nombre de trames reçues du Read.
         self.lab_pgn.config(text=f"PGN               : {tuple[0]}")  # Affiche le PGN.
@@ -401,16 +403,8 @@ class MainWindow:
 
     # Méthode appelée sur fermeture de la fenêtre principale"
     def fermer_MainWindow(self):
-        if self._handle is not None:
-            self._can_interface.close()  # Ferme l'adaptateur
-
-        if self._reader is not None:
-            self._reader.stop()  # Arrête la lecture
-            # self._reader.run()
-            # self._reader.join()
-            print("Le read est arrêté")
-            self._reader = None
-
+        self.on_close_click()
+        messagebox.showinfo("SORTIR","A la prochaine !!!")
         self._root.destroy()  # Fermer la fenêtre
     # =================== FIN DES METHODES ======================
 
@@ -418,8 +412,8 @@ class MainWindow:
 
     # Cette fonction s'éxécute sur le lancement qui est défini ci aprés, suit le principe des déclarations.
     def open(self):
+        self._root.protocol("WM_DELETE_WINDOW", self.fermer_MainWindow)
         self._root.mainloop()
-
 
 # Lance la Mainwindow
 if __name__ == "__main__":
