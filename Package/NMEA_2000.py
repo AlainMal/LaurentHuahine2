@@ -25,24 +25,24 @@ class NMEA2000:
         return self._pgn
 
     def source(self,msg):
-        self._source = msg.ID and 0xFF
+        self._source = msg.ID & 0xFF
         return self._source
 
     def destination(self,msg):
         if ((msg.ID & 0xFF0000) >> 16) < 240:
-            self._destination = (msg.ID and  0x00FF00) >> 8
+            self._destination = (msg.ID &  0x00FF00) >> 8
         else:
-            self._destination = (msg.ID and 0xFF0000) >> 16
+            self._destination = (msg.ID & 0xFF0000) >> 16
         return self._destination
 
     def priorite(self,msg):
-        self._priorite = (msg.ID and 0x1C000000) >> 26
+        self._priorite = (msg.ID & 0x1C000000) >> 26
         return self._priorite
 
     # Renvoi un tuple contenant toutes les variables contenus dans l'ID
     def id(self,msg):
         return self.pgn(msg), self.source(msg) ,self.destination(msg),self.priorite(msg)
-    # ================================== ,FIN DES METHODES POUR L'ID ===================================================
+    # ================================== FIN DES METHODES POUR L'ID ===================================================
 
 
 

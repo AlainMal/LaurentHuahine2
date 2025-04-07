@@ -64,10 +64,10 @@ class CANUSBReader(Thread):
                     self.stop()
 
                 # Voir la boucle dans la class WindowsUSBCANInterface dans CANUSB.
-                self._msg = self._interface.read(self._stop_flag)  # Lit une trame, quand il y a en une, donc on attend.
+                self._msg = self._interface.read(self._stop_flag )  # Lit une trame, quand il y a en une, donc on attend.
 
-            #
             # ********** C'EST ICI QUE L'ON MET L'INTERPRETEUR À QUI ON ENVOI LE MSG *****************
+            #
             #      Il retourne un tuple contenant le PGN, SOURCE, DESTINATION et PRIORITE
 
                 self.tuple_id = self._nmea2000.id(self._msg)
@@ -210,27 +210,23 @@ class MainWindow:
         self.button_stop = tk.Button(self._root, text="Arrêter", width=10, height=1,state='disabled', command=self.on_stop_click)
         self.button_stop.place(x=200, y=80)
 
-        # Ajouter un bouton pour afficher le PGN.
-        # self.button_stop = tk.Button(self._root, text="Voir PGN", width=10, height=1, state='normal', command=self.on_pgn_click)
-        # self.button_stop.place(x=10, y=220)
-
         # Ajouter un label qui affiche le PGN en cours
         self.lab_pgn = tk.Label(self._root, text="PGN en cours", width=40, anchor='w')
         self.lab_pgn.place(x=100, y=220)
 
-        # Ajouter un label qui affiche la source en cours
+        # Ajouter un label qui affiche la Source en cours
         self.lab_src = tk.Label(self._root, text="Source en cours", width=40, anchor='w')
         self.lab_src.place(x=100, y=240)
 
-        # Ajouter un label qui affiche la destination en cours
+        # Ajouter un label qui affiche la Destination en cours
         self.lab_dest = tk.Label(self._root, text="Destination en cours", width=40, anchor='w')
         self.lab_dest.place(x=100, y=260)
 
-        # Ajouter un label qui affiche la priorité en cours
+        # Ajouter un label qui affiche la Priorité en cours
         self.lab_prio = tk.Label(self._root, text="Priorité en cours", width=40, anchor='w')
         self.lab_prio.place(x=100, y=280)
 
-        # Ajput d'une CheckBox
+        # Ajput d'une CheckBox qui permet d'enregistrer le fichier
         self.check_enr = BooleanVar()
         check_enregistre = tk.Checkbutton(self._root, text="Enregistrer", variable=self.check_enr,command=self.on_checkbox_change)
         check_enregistre.place(x=100, y=80)  # Coordonnées précises en pixels
@@ -324,7 +320,7 @@ class MainWindow:
         self.label.config(text=f"Compteur : {compteur}")  # Affiche le nombre de trames reçues du Read.
         self.lab_pgn.config(text=f"PGN               : {tuple[0]}")  # Affiche le PGN.
         self.lab_src.config(text=f"Source           : {tuple[1]}")  # Affiche la Source
-        self.lab_dest.config(text=f"Destination   : {tuple[2]}")  # Affiche la destination.
+        self.lab_dest.config(text=f"Destination   : {tuple[2]}")  # Affiche la Destination.
         self.lab_prio.config(text=f"Priorité          : {tuple[3]}")  # Affiche la Priorité.
         print(tuple)
 
@@ -403,15 +399,17 @@ class MainWindow:
         except Exception as e:
             print(f" : {e}")
 
+    # Méthode appelée sur fermeture de la fenêtre principale"
     def fermer_MainWindow(self):
+        if self._handle is not None:
+            self._can_interface.close()  # Ferme l'adaptateur
+
         if self._reader is not None:
             self._reader.stop()  # Arrête la lecture
+            # self._reader.run()
             # self._reader.join()
             print("Le read est arrêté")
             self._reader = None
-
-        if self._handle is not None:
-            self._can_interface.close()  # Ferme l'adaptateur
 
         self._root.destroy()  # Fermer la fenêtre
     # =================== FIN DES METHODES ======================
