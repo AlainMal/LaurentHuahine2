@@ -1,9 +1,10 @@
 import tkinter as tk
 import subprocess
-from tkinter import Checkbutton, BooleanVar, ttk, filedialog, messagebox
+from tkinter import BooleanVar, ttk, filedialog, messagebox
 from threading import Thread
-from Package.CANUSB import CanMsg, WindowsUSBCANInterface, CanError
+from Package.CANUSB import  WindowsUSBCANInterface, CanError
 from Package.constante import *
+from Package.NMEA_2000 import *
 
 # *************************** CLASSE D'ENREGISTREMENT ******************************************************************
 # ***********************************************************
@@ -13,23 +14,29 @@ class CANUSBReader(Thread):
 
     def __init__(self, interface, update_callback, file):
         super().__init__()
-        self.msg = CanMsg()
+        self.tuple_id = None
+        self._pgn = None
+        self._msg = CanMsg()
         self._datas = ""
         self._interface = interface
         self._output_fd = None
         self._stop_flag = False
         self._update_callback = update_callback
 
+        # créé la génération du NMEA 2000.
+        try:
+            self._nmea2000 = NMEA2000()
+        except CanError:
+            raise
 
         if file is not None:
             self.open_file(file)
 
-
-    # Arreter la boucle du Read.
+    # Arreter la boucle du Run du Read.
     def stop(self):
         self._stop_flag = True
 
-    # Ouvrir le Thread.
+    # Démarre le Thread.
     def start(self):  # C'est une fonction du Thread
         print("Lance la Thread")
         # Lance un Thread.
@@ -48,32 +55,39 @@ class CANUSBReader(Thread):
             self._output_fd.close()
             self._output_fd = None
 
-    # Sûr en cours sur le Thread. C'est une methode particulière liée au Thread @.
+    # Sûr en cours sur le Thread. C'est une methode liée au Thread @.
     def run(self):
         count = 0
-        while not self._stop_flag:  # Tant qu'on n'arrête pas ça tourne.
+        while not self._stop_flag:  # Tant qu'on n'arrête pas, ça tourne.
             try:
                 if self._stop_flag:
                     self.stop()
 
                 # Voir la boucle dans la class WindowsUSBCANInterface dans CANUSB.
-                self.msg = self._interface.read(self._stop_flag)  # Lit une trame, quand il y a en une, donc, on attend.
-                # print("ca boucle" + str(self.msg.ID))
+                self._msg = self._interface.read(self._stop_flag)  # Lit une trame, quand il y a en une, donc on attend.
+
+            #
+            # ********** C'EST ICI QUE L'ON MET L'INTERPRETEUR À QUI ON ENVOI LE MSG *****************
+            #      Il retourne un tuple contenant le PGN, SOURCE, DESTINATION et PRIORITE
+
+                self.tuple_id = self._nmea2000.id(self._msg)
+
+            # ****************************************************************************************
 
                 # Si on a le fichier ouvert. On enregistre quand il y a un msg.
                 if self._output_fd is not None:
-                    self._datas=""
-                    # On défini les octets dans _datas.
-                    for i in range(self.msg.len):
+                    datas=""
+                    # On va définir les octets dans "datas".
+                    for i in range(self._msg.len):
                         # On commence par un espace, car ça fini par le dernier octet.
-                        self._datas += " " + format(self.msg.data[i], "02X") # hex(self.msg.data[i])
+                        datas += " " + format(self._msg.data[i], "02X") # hex(self._msg.data[i])
 
-                    # On ne met pas d'espace entre len et datas, voir self._datas ci-dessus.
-                    self._output_fd.write(f"{self.msg.TimeStamp} {self.msg.ID:08X} {self.msg.len:08X}{self._datas}\n")
+                    # On ne met pas d'espace entre len et datas, voir les datas ci-dessus.
+                    self._output_fd.write(f"{self._msg.TimeStamp} {self._msg.ID:08X} {self._msg.len:08X}{datas}\n")
 
-                # Si on a le thread en cours, On renvoie la valeur du count
+                # Si on a le thread en cours, On renvoie la valeur du count, du msg et du tuple_ID
                 if self._update_callback is not None:
-                    self._update_callback(count, self.msg)
+                    self._update_callback(count, self._msg,self.tuple_id)
                 count += 1  # Compte le nombre de trames.
             except CanError as err:
                 print("Erreur CAN", err)
@@ -87,6 +101,8 @@ class CANUSBReader(Thread):
         # Sinon on ferme le fichier et on ferme l'interface
         self.close_file()
         self._interface.close()
+        # Thread.join(self)
+
 # ******************************** FIN DE LA CLASS ENREGISTREMENT ******************************************************
 
 # ************************************ FENETRE DU STATUS ***************************************************************
@@ -115,8 +131,8 @@ class FenetreStatus:
         self._treeview.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
         print("TreeView Installé")
 
-    def remplir_treeview(self, status):
-        # Liste des différents défauts
+    def remplir_treeview(self):
+        # La liste des différents défauts
         status_data = (
             ("Pas de défaut", "CANSTATUS_NO_ERROR"),
             ("Buffer de réception plein", "CANSTATUS_RECEIVE_FIFO_FULL"),
@@ -142,14 +158,10 @@ class FenetreStatus:
 
 # *********************************** FENETRE PRINCIPALES **************************************************************
 class MainWindow:
-
-    # Fonction de creation de la fenêtre principale
-    lab_fic = None
-
     def __init__(self):
         self._root = tk.Tk()
-        self._root.title("LECTURE DES TRAMES EN TEMPS REEL")
-        self._root.geometry("600x386")
+        self._root.title("TEMPS REEL")
+        self._root.geometry("290x386")
 
         # Associer une action à la fermeture de la fenêtre
         self._root.protocol("WM_DELETE_WINDOW", self.fermer_MainWindow)
@@ -191,40 +203,39 @@ class MainWindow:
         self.button_status.place(x=10, y=120)
 
         # Ajouter un bouton pour afficher le fichier .txt.
-        self.button_fichier = tk.Button(self._root, text="..", width=2, height=1, command=self.on_fichier_click)
+        self.button_fichier = tk.Button(self._root, text="...", width=2, height=1, command=self.on_fichier_click)
         self.button_fichier.place(x=10, y=160)
 
         # Ajouter un bouton pour afficher le fichier .txt.
-        self.button_stop = tk.Button(self._root, text="Arrêter ..", width=10, height=1,state='disabled', command=self.on_stop_click)
+        self.button_stop = tk.Button(self._root, text="Arrêter", width=10, height=1,state='disabled', command=self.on_stop_click)
         self.button_stop.place(x=200, y=80)
+
+        # Ajouter un bouton pour afficher le PGN.
+        # self.button_stop = tk.Button(self._root, text="Voir PGN", width=10, height=1, state='normal', command=self.on_pgn_click)
+        # self.button_stop.place(x=10, y=220)
+
+        # Ajouter un label qui affiche le PGN en cours
+        self.lab_pgn = tk.Label(self._root, text="PGN en cours", width=40, anchor='w')
+        self.lab_pgn.place(x=100, y=220)
+
+        # Ajouter un label qui affiche la source en cours
+        self.lab_src = tk.Label(self._root, text="Source en cours", width=40, anchor='w')
+        self.lab_src.place(x=100, y=240)
+
+        # Ajouter un label qui affiche la destination en cours
+        self.lab_dest = tk.Label(self._root, text="Destination en cours", width=40, anchor='w')
+        self.lab_dest.place(x=100, y=260)
+
+        # Ajouter un label qui affiche la priorité en cours
+        self.lab_prio = tk.Label(self._root, text="Priorité en cours", width=40, anchor='w')
+        self.lab_prio.place(x=100, y=280)
 
         # Ajput d'une CheckBox
         self.check_enr = BooleanVar()
-        check_enregistre = tk.Checkbutton(self._root, text="Enregistrer", variable=self.check_enr,
-                                          command=self.on_checkbox_change)
+        check_enregistre = tk.Checkbutton(self._root, text="Enregistrer", variable=self.check_enr,command=self.on_checkbox_change)
         check_enregistre.place(x=100, y=80)  # Coordonnées précises en pixels
 
-        # Ajout un TreeView avec 3 colonnes
-        self.tree = ttk.Treeview(self._root, columns=("ID", "Length", "Data"), show="headings", height=18)
-        # Positionner le Treeview et la Scrollbar
-        self.tree.place(x=330, y=0)
-
-        # Ajout des en-têtes des colonnes
-        self.tree.heading("ID", text="ID")
-        self.tree.heading("Length", text="Len")
-        self.tree.heading("Data", text="Data")
-
-        # Ajuster la taille des colonnes
-        self.tree.column("ID", width=70)
-        self.tree.column("Length", width=30)
-        self.tree.column("Data", width=150)
-
-        # Ajout d'une verticale scrollbar sur la fenêtre
-        scrollbar = ttk.Scrollbar(self._root, orient='vertical', command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scrollbar.set)
-        scrollbar.pack(side='right', fill='y')
-
-        # Ajouter un label qui affiche le nombre de scrutations
+       # Ajouter un label qui affiche le nombre de scrutations
         self.label = tk.Label(self._root, text="Affichage du nombre de trames reçues ", width=40, anchor='w')
         self.label.place(x=5, y=10)
 
@@ -234,7 +245,7 @@ class MainWindow:
 
         # ====================== FIN DES CONTROLES ======================================
 
-    # ========== FONCTIONS D'ACTIVATION ET DESACTIVATION DES BOUTONS ==========
+    # ========== METHODES D'ACTIVATION ET DESACTIVATION DES BOUTONS ==========
     def disable_button_open(self):
         self.button_open['state'] = 'disabled'  # Désactive le bouton
 
@@ -260,7 +271,7 @@ class MainWindow:
         self.button_stop['state'] = 'normal'  # Active le bouton
     # ======================= FIN D'ACTUALISATION DES BOUTONS =========================
 
-    # =================== FONCTIONS DES CONTROLES SUR LA FENETRE ======================
+    # =================== METHOOES DES CONTROLES SUR LA FENETRE ======================
     # Fonction sur OPEN click
     def on_open_click(self):
         print("Bouton cliqué ! Voici un programme d'ouverture.")
@@ -274,7 +285,7 @@ class MainWindow:
 
         print(f"Résultat de l'appel : {self._handle}")
 
-        if self._handle:  # Si c'est l'adaptateur est ouvert.
+        if self._handle:  # Si l'adaptateur est ouvert.
             self.disable_button_open()  # Met le bouton d'ouverture en disabled
             self.enable_button_close()
             self.enable_button_read()
@@ -309,8 +320,14 @@ class MainWindow:
             self.enable_button_stop()
 
     # Fonction en callback. Appelé par CANUSBReader
-    def update_read(self, compteur, msg):
-        self.label.config(text=f"Compteur : {compteur}")  # Affiche le nombre de trames reçues du Thread.
+    def update_read(self, compteur, msg, tuple):
+        self.label.config(text=f"Compteur : {compteur}")  # Affiche le nombre de trames reçues du Read.
+        self.lab_pgn.config(text=f"PGN               : {tuple[0]}")  # Affiche le PGN.
+        self.lab_src.config(text=f"Source           : {tuple[1]}")  # Affiche la Source
+        self.lab_dest.config(text=f"Destination   : {tuple[2]}")  # Affiche la destination.
+        self.lab_prio.config(text=f"Priorité          : {tuple[3]}")  # Affiche la Priorité.
+        print(tuple)
+
         self._root.update()
 
     def on_stop_click(self):
@@ -329,7 +346,7 @@ class MainWindow:
                 self._FenetreStatus = FenetreStatus(self._status)
 
             print(f"Remplir TreeView avec le statut: {self._status}")
-            self._FenetreStatus.remplir_treeview(self._status)  # Mettre à jour la TreeView
+            self._FenetreStatus.remplir_treeview()  # Mettre à jour la TreeView
         except Exception as e:
             print(f"Errself._FenetreStatus.remplir_treeview(self._status)eur : {e}")
 
@@ -377,7 +394,7 @@ class MainWindow:
                 # Ouvrir la boîte de dialogue pour sélectionner un fichier
                 self.ouvre_fichier()
                 if self.fichier_chemin == "":
-                    self.fichier_chemin= None  # il y a une différence ici
+                    self.fichier_chemin= None
                 else:
                     print("Fichier :" + str(self.fichier_chemin))
                     # Incrit le fichier sur l'écran.
@@ -389,6 +406,7 @@ class MainWindow:
     def fermer_MainWindow(self):
         if self._reader is not None:
             self._reader.stop()  # Arrête la lecture
+            # self._reader.join()
             print("Le read est arrêté")
             self._reader = None
 
@@ -396,7 +414,7 @@ class MainWindow:
             self._can_interface.close()  # Ferme l'adaptateur
 
         self._root.destroy()  # Fermer la fenêtre
-    # =================== FIN DES FONCTIONS ======================
+    # =================== FIN DES METHODES ======================
 
     # **************************************** FIN DE LA CLASS MainWondow *********************************************
 
