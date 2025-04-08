@@ -1,5 +1,4 @@
 import tkinter as tk
-
 class FenetreAppercu:
     def __init__(self):
         self._fenetre_appercu = tk.Tk()  # Création de la fenêtre
@@ -50,12 +49,12 @@ class FenetreAppercu:
             self._textboxes2.append(textbox)
 
 
-    def ecrire(self):
-        pass
+    def ecrit(self, valeur: str, position: int):
+        self._textboxes1[position].delete("1.0", tk.END)
+        self._textboxes1[position].insert("1.0", valeur)
 
-class Ecrit:
-    def __init__(self):
 
-        pass
+
+
 
 

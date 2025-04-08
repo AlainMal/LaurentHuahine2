@@ -15,6 +15,8 @@ class CANUSBReader(Thread):
 
     def __init__(self, interface, update_callback, file):
         super().__init__()
+        self._FenetreAppercu = None
+        self._ecrit = None
         self._resultat = None
         self.tuple_id = None
         self._pgn = None
@@ -28,7 +30,7 @@ class CANUSBReader(Thread):
         # créé la génération du NMEA 2000 et de l'apperçu.
         try:
             self._nmea2000 = NMEA2000()
-            self._ecrit = Ecrit()
+            # self._fenetre_appercu = FenetreAppercu()
         except CanError:
             raise
 
@@ -62,8 +64,12 @@ class CANUSBReader(Thread):
     # Sûr en cours sur le Thread. C'est une methode liée au Thread @.
     def run(self):
         count = 0
+
         while not self._stop_flag:  # Tant qu'on n'arrête pas, ça tourne.
             try:
+                # UN ESSAI ********************************************* >>>
+                FenetreAppercu().ecrit("azerty", 2)
+                # ****************************************************** <<<
                 if self._stop_flag:
                     self.stop()
 
@@ -80,9 +86,10 @@ class CANUSBReader(Thread):
                 self._resultat = self._nmea2000.tuple_octets(self._msg)
                 # print(self._resultat)
 
-               # Il manque encore la fonction qui envoi sur la fenêtre FenetreAppercu.
+                # Il manque encore la fonction qui envoi sur la fenêtre FenetreAppercu.
+                FenetreAppercu().ecrit("azerty", 2) # UN ESSAI
 
-            # **********************************************************************************************
+           # **********************************************************************************************
 
                 # Si on a le fichier ouvert. On enregistre quand il y a un msg.
                 if self._output_fd is not None:
@@ -169,6 +176,7 @@ class FenetreStatus:
 # *********************************** FENETRE PRINCIPALES **************************************************************
 class MainWindow:
     def __init__(self):
+        self._FenetreAppercu = None
         self._root = tk.Tk()
         self._root.title("TEMPS REEL")
         self._root.geometry("290x386")
@@ -415,12 +423,12 @@ class MainWindow:
         except Exception as e:
             print(f" : {e}")
 
-    # Méthode pour afficher sur une fenêtre qui montre les résultats.
+    # Méthode pour afficher la fenêtre résultat
     def on_voir_click(self):
         self._FenetreAppercu = None
         if not self._FenetreAppercu:
             self._FenetreAppercu = FenetreAppercu()
-
+            self._FenetreAppercu.ecrit("poiuytre", 5)
 
     # Méthode appelée sur fermeture de la fenêtre principale"
     def fermer_MainWindow(self):
