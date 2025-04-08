@@ -74,14 +74,13 @@ class CANUSBReader(Thread):
             # *********************************************************************************************
                 # Appel la fonction qui renvoi un tuple sur l'ID, cette fonction doit disparaitre.
                 self.tuple_id = self._nmea2000.id(self._msg)
-                
+
                 # Appel la fonction qui retourne le tuple de tous les résultats
                 self._resultat = self._nmea2000.tuple_octets(self._msg)
+                # print(self._resultat)
 
-                # Un petit essai
-                self._resultat[2]="essai du PGN3"
+               # Il manque encore la Méthode qui envoi sur la fenêtre FenetreAppercu.
 
-                # Il manque encore la Méthode qui envoi sur la fenêtre FenetreAppercu.
             # **********************************************************************************************
 
                 # Si on a le fichier ouvert. On enregistre quand il y a un msg.
@@ -90,14 +89,14 @@ class CANUSBReader(Thread):
                     # On va définir les octets dans "datas".
                     for i in range(self._msg.len):
                         # On commence par un espace, car ça fini par le dernier octet.
-                        datas += " " + format(self._msg.data[i], "02X") # hex(self._msg.data[i])
+                        datas += " " + format(self._msg.data[i], "02X")
 
                     # On ne met pas d'espace entre len et datas, voir les datas ci-dessus.
                     self._output_fd.write(f"{self._msg.TimeStamp} {self._msg.ID:08X} {self._msg.len:08X}{datas}\n")
 
-                # Si on a le thread en cours, On renvoie la valeur du count, du msg et du tuple_ID
+                # Si on a le thread en cours, On renvoie la valeur du count et du tuple_ID
                 if self._update_callback is not None:
-                    self._update_callback(count, self._msg,self.tuple_id)
+                    self._update_callback(count, self.tuple_id)
                 count += 1  # Compte le nombre de trames.
             except CanError as err:
                 print("Erreur CAN", err)
@@ -111,7 +110,7 @@ class CANUSBReader(Thread):
         # Sinon on ferme le fichier et on ferme l'interface
         self.close_file()
         self._interface.close()
-        # Thread.join(self)
+        # Thread.join(self)     # A VOIR
 
 # ******************************** FIN DE LA CLASS ENREGISTREMENT ******************************************************
 
@@ -204,39 +203,38 @@ class MainWindow:
         self.button_read.place(x=10, y=80)
 
         # Ajout d'un bouton CLOSE et défini sa taille puis défini son emplacement
-        self.button_close = tk.Button(self._root, text="Close", width=10, height=1, state='disabled',
-                                      command=self.on_close_click)
+        self.button_close = tk.Button(self._root, text="Close", width=10, height=1, state='disabled', command=self.on_close_click)
         self.button_close.place(x=100, y=40)
 
-        # Ajouter un bouton pour ouvrir la fenêtre des états
+        # Ajout d'un bouton pour ouvrir la fenêtre des états
         self.button_status = tk.Button(self._root, text="États", width=10, height=1, command=self.on_status_click)
         self.button_status.place(x=10, y=120)
 
-        # Ajouter un bouton pour afficher le fichier .txt.
+        # Ajout d'un bouton pour afficher le fichier .txt.
         self.button_fichier = tk.Button(self._root, text="...", width=2, height=1, command=self.on_fichier_click)
         self.button_fichier.place(x=10, y=160)
 
-        # Ajouter un bouton pour afficher le fichier .txt.
+        # Ajout d'un bouton pour afficher le fichier .txt.
         self.button_stop = tk.Button(self._root, text="Arrêter", width=10, height=1,state='disabled', command=self.on_stop_click)
         self.button_stop.place(x=200, y=80)
 
-        # Ajouter un bouton pour afficher la fenêtre "Apperçu"
+        # Ajout d'un bouton pour afficher la fenêtre "Apperçu"
         self.button_voir = tk.Button(self._root, text="Voir ...", width=10, height=1, state='normal', command=self.on_voir_click)
         self.button_voir.place(x=100, y=340)
 
-        # Ajouter un label qui affiche le PGN en cours
+        # Ajout d'un label qui affiche le PGN en cours
         self.lab_pgn = tk.Label(self._root, text="PGN en cours", width=40, anchor='w')
         self.lab_pgn.place(x=100, y=220)
 
-        # Ajouter un label qui affiche la Source en cours
+        # Ajout d'un label qui affiche la Source en cours
         self.lab_src = tk.Label(self._root, text="Source en cours", width=40, anchor='w')
         self.lab_src.place(x=100, y=240)
 
-        # Ajouter un label qui affiche la Destination en cours
+        # Ajout d'un label qui affiche la Destination en cours
         self.lab_dest = tk.Label(self._root, text="Destination en cours", width=40, anchor='w')
         self.lab_dest.place(x=100, y=260)
 
-        # Ajouter un label qui affiche la Priorité en cours
+        # Ajout d'un label qui affiche la Priorité en cours
         self.lab_prio = tk.Label(self._root, text="Priorité en cours", width=40, anchor='w')
         self.lab_prio.place(x=100, y=280)
 
@@ -245,11 +243,11 @@ class MainWindow:
         check_enregistre = tk.Checkbutton(self._root, text="Enregistrer", variable=self.check_enr,command=self.on_checkbox_change)
         check_enregistre.place(x=100, y=80)  # Coordonnées précises en pixels
 
-       # Ajouter un label qui affiche le nombre de scrutations
+       # Ajout d'un label qui affiche le nombre de scrutations
         self.label = tk.Label(self._root, text="Affichage du nombre de trames reçues ", width=40, anchor='w')
         self.label.place(x=5, y=10)
 
-        # Ajouter un label qui affiche le fichier en cours
+        # Ajout d'un label qui affiche le fichier en cours
         self.lab_fic = tk.Label(self._root, text="Fichier en cours", width=40, anchor='w')
         self.lab_fic.place(x=40, y=160)
 
@@ -322,6 +320,7 @@ class MainWindow:
         print("Bouton cliqué ! Voici votre programme de lecture.")
         if self._handle:
             self.disable_button_read()  # Desactive le bouton READ
+
             # Appelle la fonction de lecture en temps réel
             self._reader = CANUSBReader(self._can_interface, self.update_read, self.fichier_chemin)
 
@@ -330,13 +329,15 @@ class MainWindow:
             self.enable_button_stop()
 
     # Fonction en callback. Appelé par la classe CANUSBReader
-    def update_read(self, compteur, msg, tuple):
+    def update_read(self, compteur, tuple):
         self.label.config(text=f"Compteur : {compteur}")  # Affiche le nombre de trames reçues du Read.
+
+        # A SUPPRIMER
         self.lab_pgn.config(text=f"PGN               : {tuple[0]}")  # Affiche le PGN.
         self.lab_src.config(text=f"Source           : {tuple[1]}")  # Affiche la Source
         self.lab_dest.config(text=f"Destination   : {tuple[2]}")  # Affiche la Destination.
         self.lab_prio.config(text=f"Priorité          : {tuple[3]}")  # Affiche la Priorité.
-        print(tuple)
+        # print(tuple)
 
         self._root.update()
 

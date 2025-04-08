@@ -36,9 +36,10 @@ class NMEA2000:
         ps = (msg.ID &  0x00FF00) >> 8
         dp = (msg.ID & 0x1000000) >> 8
         if (pf >> 8) < 240:
-            self._pgn = ps or dp
+            self._pgn = ps | dp
         else:
-            self._pgn = pf or ps or dp
+            self._pgn = pf | ps | dp
+
         return self._pgn
 
     def source(self,msg):
@@ -50,6 +51,7 @@ class NMEA2000:
             self._destination = (msg.ID &  0x00FF00) >> 8
         else:
             self._destination = (msg.ID & 0xFF0000) >> 16
+
         return self._destination
 
     def priorite(self,msg):
@@ -62,7 +64,7 @@ class NMEA2000:
     # ================================== FIN DES METHODES POUR L'ID ====================================================
 
     # ========================== Méthodes de récupération des valeurs des octets =======================================
-    def octets(self,pgn):
+    def octets(self,pgn,msg):
         match pgn:
             case 130306:
                 self._valeurChoisie1 = (msg.data[2] << 8 | msg.data[1]) * 0.01 * 1.94384449
@@ -165,7 +167,7 @@ class NMEA2000:
                 self._valeurChoisie2 = (msg.data[4] << 8 | msg.data[3]) * 0.01 * 1.94384449
                 self._pgn2 = "Vitesse fond"
 
-                self._valeurChoisietab = (msg.data[5] & 0x07)
+                self._valeurChoisieTab = (msg.data[5] & 0x07)
                 # self._pgntab =
 
                 # Pour Analyse.
@@ -213,6 +215,7 @@ class NMEA2000:
             case _:
                 self._pgn1 = "<PGN inconnu sur cette version>"
 
+        # Retoune le tuple qui ne comprend pas les analyses pour l'instant.
         return self._pgn1, self._pgn2, self._pgn3, self._valeurChoisie1, self._valeurChoisie2, self._valeurChoisie3, self._valeurChoisieTab
 
     # Méthode qui retourne le tuple des octets.
@@ -221,7 +224,7 @@ class NMEA2000:
         pgn = self.pgn(msg)
 
         # Retourne le tuple des octets définis à travers de la méthode octets(pgn).
-        return self.octets(pgn)
+        return self.octets(pgn,msg)
 
 
 
