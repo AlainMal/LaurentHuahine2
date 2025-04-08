@@ -25,9 +25,10 @@ class CANUSBReader(Thread):
         self._stop_flag = False
         self._update_callback = update_callback
 
-        # créé la génération du NMEA 2000.
+        # créé la génération du NMEA 2000 et de l'apperçu.
         try:
             self._nmea2000 = NMEA2000()
+            self._ecrit = Ecrit()
         except CanError:
             raise
 
@@ -79,7 +80,7 @@ class CANUSBReader(Thread):
                 self._resultat = self._nmea2000.tuple_octets(self._msg)
                 # print(self._resultat)
 
-               # Il manque encore la Méthode qui envoi sur la fenêtre FenetreAppercu.
+               # Il manque encore la fonction qui envoi sur la fenêtre FenetreAppercu.
 
             # **********************************************************************************************
 

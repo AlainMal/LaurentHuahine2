@@ -6,6 +6,7 @@ class FenetreAppercu:
         self._fenetre_appercu.title("Apperçu des valeur en temps réel")
         self._fenetre_appercu.geometry("590x405")
 
+
         # ************ >> Frame sur la gauche << *********************
         frame1 = tk.Frame(self._fenetre_appercu, width=100, height=600)
         frame1.pack(padx=10, pady=10)
@@ -34,7 +35,7 @@ class FenetreAppercu:
 
         # Ajouter les commentaires et les zones de texte
         labels2 = ("Niveau d'eau douce", "Total eau douce", "Niveau Gasoil", "Total Gasoil")  # Liste des commentaires
-        textboxes2 = []  # Pour stocker les textbox
+        self._textboxes2 = []  # Pour stocker les textbox
 
         for i, label_text in enumerate(labels2):
             # Créer un commentaire (Label)
@@ -46,11 +47,15 @@ class FenetreAppercu:
             textbox.grid(row=i, column=1, padx=5, pady=5)  # Alignée à droite du commentaire
 
             # Stocker la textbox pour un usage ultérieur
-            textboxes2.append(textbox)
+            self._textboxes2.append(textbox)
 
 
     def ecrire(self):
         pass
 
+class Ecrit:
+    def __init__(self):
+
+        pass
 
 
