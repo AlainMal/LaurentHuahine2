@@ -29,6 +29,7 @@ class FenetreStatus(QMainWindow):
         # Remplir le TreeWidget
         self.remplir_treewidget()
 
+    # ========================== DEBUT DES METHODES STATUS =========================================
     def remplir_treewidget(self):
         # La liste des différents défauts
         status_data = (
@@ -66,6 +67,9 @@ class MainWindow(QMainWindow):
         self._can_interface = None
         self._handle = None
         self._status = None
+
+        self._can_interface = WindowsUSBCANInterface(self)
+
         # Importe l'UI fais avec le designer
         uic.loadUi('Alain.ui', self)
 
@@ -86,10 +90,10 @@ class MainWindow(QMainWindow):
         # Ouvre la fenêtre
         self.show()
 
+    # ========================== DEBUT DES METHODES =========================================
     def on_click_open(self):
         print("Bouton cliqué ! Voici un programme d'ouverture.")
         # défini une instance de la classe
-        self._can_interface = WindowsUSBCANInterface(self)
 
         # Appelle cette fonction de manière explicite et la fait passer sur "interface".
         self._handle = self._can_interface.open(CAN_BAUD_250K,
@@ -130,9 +134,7 @@ class MainWindow(QMainWindow):
 
     def on_click_file(self):
         print("Bouton 'cmd_fichier' cliqué !")
-    # ========================== METHODES =========================================
-
-
+    # ========================== FIN DES METHODES =========================================
 
 app = QApplication(sys.argv)
 window = MainWindow()

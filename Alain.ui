@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>627</width>
+    <height>480</height>
+   </rect>
+  </property>
   <property name="minimumSize">
    <size>
     <width>627</width>
@@ -16,6 +24,9 @@
   </property>
   <property name="windowTitle">
    <string>Temps réel</string>
+  </property>
+  <property name="windowIcon">
+   <iconset theme="network-wired"/>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPushButton" name="cmd_file">
