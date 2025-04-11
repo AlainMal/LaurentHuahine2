@@ -26,7 +26,8 @@
    <string>Temps réel</string>
   </property>
   <property name="windowIcon">
-   <iconset theme="network-wired"/>
+   <iconset>
+    <normaloff>../ps2.png</normaloff>../ps2.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPushButton" name="cmd_file">
@@ -109,7 +110,7 @@
      <rect>
       <x>100</x>
       <y>50</y>
-      <width>75</width>
+      <width>81</width>
       <height>20</height>
      </rect>
     </property>
@@ -141,6 +142,19 @@
     </property>
     <property name="text">
      <string>Voir ...</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lab_trame">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>170</y>
+      <width>161</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Nombre de trames</string>
     </property>
    </widget>
   </widget>

@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QLineEdit,Q
                              QHeaderView,QMessageBox, QAction, QFileDialog, QAbstractItemView, QTreeWidget,QTreeWidgetItem)
 from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex
 from PyQt5 import uic
+from PyQt5.QtGui import QIcon
 
 from Package.CANUSB import  WindowsUSBCANInterface, CanError
 from Package.constante import *
@@ -20,7 +21,7 @@ class FenetreStatus(QMainWindow):
         # Création du QTreeWidget
         self._treewidget = QTreeWidget(self)
         self._treewidget.setColumnCount(2)
-        self._treewidget.setHeaderLabels(["Désignation", "Etats"])
+        self._treewidget.setHeaderLabels(["Désignations", "Etats"])
         self.setCentralWidget(self._treewidget)
 
         self._treewidget.setColumnWidth(0, 230)  # Définit la largeur de la première colonne à 200 pixels
@@ -61,6 +62,7 @@ class FenetreStatus(QMainWindow):
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow,self).__init__()
+        self.setWindowIcon(QIcon("d:/alain/ps2.png"))
         #Chargement du formulaire.
         self._reader = None
         self._FenetreStatus = None
@@ -130,7 +132,7 @@ class MainWindow(QMainWindow):
             self._FenetreStatus.show()
             self._FenetreStatus.remplir_treeview()  # Mettre à jour la TreeView
         except Exception as e:
-            print(f"Errself._FenetreStatus.remplir_treeview(self._status) : {e}")
+            print(f"self._FenetreStatus.remplir_treeview(self._status) : {e}")
 
     def on_click_file(self):
         print("Bouton 'cmd_fichier' cliqué !")
