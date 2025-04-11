@@ -75,7 +75,7 @@ class MainWindow(QMainWindow):
         # Importe l'UI fais avec le designer
         uic.loadUi('Alain.ui', self)
 
-        # Variable pour les objets (Boutons, case à cocher…,
+        # Variable pour les objets (Boutons, case à cocher, etc.),
         self._open = self.findChild(QPushButton, "cmd_open")
         self._close = self.findChild(QPushButton, "cmd_close")
         self._read = self.findChild(QPushButton, "cmd_read")
@@ -117,8 +117,10 @@ class MainWindow(QMainWindow):
             self._reader = None
 
     def on_click_read(self):
-        print("Bouton 'cmd_read' cliqué !")
-        pass
+        print("Bouton cliqué ! Voici votre programme de lecture.")
+        if self._handle:
+            # Appelle la fonction de lecture en temps réel. À modifier pour qu'elle se fasse en temps réel par asyncio.
+            self._reader = self._can_interface.read(self._stop_flag)
 
     def on_click_status(self):
         try:
