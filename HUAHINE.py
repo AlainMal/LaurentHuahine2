@@ -89,8 +89,6 @@ class MainWindow(QMainWindow):
         self._file = self.findChild(QPushButton, "cmd_file")
         self._status = self.findChild(QPushButton, "cmd_status")
         self._stop = self.findChild(QPushButton, "cmd_stop")
-        """self._lab_file = QLabel("Fichier ...")
-        self._layout.addWidget(self._lab_file)"""
 
         # Appel des méthodes des widgets.
         self._open.clicked.connect(self.on_click_open)
@@ -164,7 +162,7 @@ class MainWindow(QMainWindow):
         #Attent le résulat du read
         await self.read()
 
-    # Méthode su clique, mêt le fonction "main()" asynchone en route
+    # Méthode sur clique, mêt le fonction "main()" asynchone en route
     def on_click_read(self):
         self._stop_flag = False
         if self._handle == 256:
