@@ -70,7 +70,6 @@ class MainWindow(QMainWindow):
         super(MainWindow,self).__init__()
         self.setWindowIcon(QIcon("d:/alain/ps2.png"))
         #Chargement du formulaire.
-        self._reader = None
         self._FenetreStatus = None
         self._can_interface = None
         self._handle = None
@@ -102,10 +101,23 @@ class MainWindow(QMainWindow):
         self._read.setEnabled(False)
         self._stop.setEnabled(False)
 
+        self.actionQuitter.triggered.connect(self.close_both)
         # Ouvre la fenêtre
         self.show()
 
     # ========================== DEBUT DES METHODES =========================================
+    # Métode sur l'action sur la menu Quitter, on ferme tous.
+    def close_both(self):
+        # self.on_click_close()
+        # Fermer FenetreStatus si elle est ouverte
+        if self.fenetre_status is not None:
+            self.fenetre_status.close()
+
+        # Fermer la fenêtre courante
+        self.close()
+
+
+
     def on_click_open(self):
         # Appelle cette fonction de manière explicite et la fait passer sur "interface".
         self._handle = self._can_interface.open(CAN_BAUD_250K,
@@ -123,20 +135,21 @@ class MainWindow(QMainWindow):
         return self._handle
 
     def on_click_close(self):
+        self._stop_flag = True
         if self._handle == 256:
-            self._stop_flag = True
             self._can_interface.close()  # Ferme l'adaptateur
-
-            print("C'est arrêté.")
-            self._reader = None
+            print("C'est complétemet arrêté.")
             self._open.setEnabled(True)
             self._close.setEnabled(False)
             self._read.setEnabled(False)
+            self._stop.setEnabled(False)
+            self._stop_flag = False
 
     def on_click_stop(self):
         self._stop_flag = True
         self._read.setEnabled(True)
         self._stop.setEnabled(False)
+        print("C'est Arrêté ...")
 
     # Méthode du read sur dll, boucle tout le temps.
     async def read(self):
@@ -151,7 +164,16 @@ class MainWindow(QMainWindow):
 
                 # Traiter le message après réception
                 if msg:
-                    print("Message CAN reçu :", msg)
+                    if self.check_file.isChecked():
+                        print("Message CAN reçu :", msg)
+                        datas = ""
+                        # On va définir les octets dans "datas".
+                        for i in range(self._msg.len):
+                            # On commence par un espace, car ça fini par le dernier octet.
+                            datas += " " + format(self._msg.data[i], "02X")
+                            # On ne met pas d'espace entre len et datas, voir les datas ci-dessus.
+                            with open(self._file_path, "w") as file:
+                                file.write(f"{self._msg.TimeStamp} {self._msg.ID:08X} {self._msg.len:08X}{datas}\n")
 
             except Exception as e:
                 # Gestion des erreurs pendant la lecture
@@ -186,26 +208,23 @@ class MainWindow(QMainWindow):
     # Méthode pour ouvrir un fichier
     def on_click_file(self):
         # Boîte de dialogue pour sélectionner un fichier ou en définir un nouveau
-        file_path, _ = QFileDialog.getSaveFileName(
+        self._file_path, _ = QFileDialog.getSaveFileName(
             self,
             "Ouvrir ou Créer un Fichier",  # Titre de la boîte de dialogue
             "",  # Dossier initial
             "Fichier texte (*.txt);;Tous les fichiers (*.*)"  # Types de fichiers filtres
         )
 
-        if file_path:  # Vérifie si un fichier a été sélectionné
+        if self._file_path:  # Vérifie si un fichier a été sélectionné
             # Si le fichier n'existe pas, le créer
-            if not os.path.exists(file_path):
-                with open(file_path, "w") as file:
+            if not os.path.exists(self._file_path):
+                with open(self._file_path, "w") as file:
                     file.write("")  # Crée un fichier vide
-                print(f"Fichier créé : {file_path}")
-                self.lab_file.setText(str(file_path))
-
-
+                print(f"Fichier créé : {self._file_path}")
+                self.lab_file.setText(str(self._file_path))
             else:
-                print(f"Fichier ouvert : {file_path}")
-                self.lab_file.setText(str(file_path))
-
+                print(f"Fichier ouvert : {self._file_path}")
+                self.lab_file.setText(str(self._file_path))
         else:
             print("Aucun fichier sélectionné.")
             self.lab_file.setText("Aucun fichier sélectionné ")
