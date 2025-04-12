@@ -108,15 +108,15 @@ class MainWindow(QMainWindow):
     # ========================== DEBUT DES METHODES =========================================
     # Métode sur l'action sur la menu Quitter, on ferme tous.
     def close_both(self):
-        # self.on_click_close()
+        print("Fermeture des fenêtres...")
         # Fermer FenetreStatus si elle est ouverte
         if self.fenetre_status is not None:
             self.fenetre_status.close()
+            self.fenetre_status = None
 
-        # Fermer la fenêtre courante
+            # Fermer la fenêtre courante
+        print("Fermeture de la fenêtre principale")
         self.close()
-
-
 
     def on_click_open(self):
         # Appelle cette fonction de manière explicite et la fait passer sur "interface".
@@ -199,9 +199,7 @@ class MainWindow(QMainWindow):
                 print("STATUS = " +str(self._status))
                 self._FenetreStatus = FenetreStatus(self._status)
 
-            print(f"Remplir TreeView avec le statut: {self._status}")
             self._FenetreStatus.show()
-            self._FenetreStatus.remplir_treeview()  # Mettre à jour la TreeView
         except Exception as e:
             print(f"self._FenetreStatus.remplir_treeview(self._status) : {e}")
 
