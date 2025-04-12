@@ -140,18 +140,18 @@ class MainWindow(QMainWindow):
         self._read.setEnabled(True)
         self._stop.setEnabled(False)
 
+    # Méthode du read sur dll, boucle tout le temps.
     async def read(self):
         print("On est entré dans la boucle de lecture.")
         self._read.setEnabled(False)
         self._stop.setEnabled(True)
-
         # Boucle tant que `self._stop_flag` est False
         while not self._stop_flag:
             try:
                 # Attendre qu'un message CAN soit lu de manière non-bloquante
                 msg = await self._can_interface.read(self._stop_flag)
 
-                # Traitez le message après réception
+                # Traiter le message après réception
                 if msg:
                     print("Message CAN reçu :", msg)
 
@@ -159,14 +159,18 @@ class MainWindow(QMainWindow):
                 # Gestion des erreurs pendant la lecture
                 print(f"Erreur pendant la lecture CAN : {e}")
 
+    # Méthode qui gére le read()
     async def main(self):
+        #Attent le résulat du read
         await self.read()
 
+    # Méthode su clique, mêt le fonction "main()" asynchone en route
     def on_click_read(self):
         self._stop_flag = False
         if self._handle == 256:
             asyncio.ensure_future(self.main())
 
+    # Méthode pour ouvrir la fenêtre Status
     def on_click_status(self):
         try:
             self._FenetreStatus = None
@@ -181,6 +185,7 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print(f"self._FenetreStatus.remplir_treeview(self._status) : {e}")
 
+    # Méthode pour ouvrir un fichier
     def on_click_file(self):
         # Boîte de dialogue pour sélectionner un fichier ou en définir un nouveau
         file_path, _ = QFileDialog.getSaveFileName(
@@ -206,7 +211,6 @@ class MainWindow(QMainWindow):
         else:
             print("Aucun fichier sélectionné.")
             self.lab_file.setText("Aucun fichier sélectionné ")
-
     # ========================== FIN DES METHODES =========================================
 
 
@@ -219,27 +223,6 @@ if __name__ == "__main__":
 
     window = MainWindow()
 
-    # Exemple d'appel d'une fonction async
-#    asyncio.ensure_future(window.async_task_example())
-
     # Intégration avec la boucle PyQt5
     with loop:
         loop.run_forever()
-
-"""
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-
-    # Démarrer asyncio sans bloquer PyQt5
-    
-    loop = asyncio.get_event_loop()
-    loop.run_forever()
-    app.exec_()
-
-
-
-app = QApplication(sys.argv)
-window = MainWindow()
-app.exec_()
-"""
