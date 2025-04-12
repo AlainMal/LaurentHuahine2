@@ -27,7 +27,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../ps2.png</normaloff>../ps2.png</iconset>
+    <normaloff>C:/Users/alain/.designer/ps2.png</normaloff>C:/Users/alain/.designer/ps2.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPushButton" name="cmd_file">
@@ -155,6 +155,19 @@
     </property>
     <property name="text">
      <string>Nombre de trames</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lab_file">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>140</y>
+      <width>221</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Aucun fichier sélectionné</string>
     </property>
    </widget>
   </widget>

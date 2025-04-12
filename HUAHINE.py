@@ -1,6 +1,12 @@
 import sys
+import asyncio
+import os
+
+from qasync import QEventLoop
+
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QLineEdit,QTableView, QDateEdit,
-                             QHeaderView,QMessageBox, QAction, QFileDialog, QAbstractItemView, QTreeWidget,QTreeWidgetItem)
+                             QHeaderView,QMessageBox, QAction, QFileDialog,
+                             QAbstractItemView, QTreeWidget,QTreeWidgetItem,QLabel)
 from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex
 from PyQt5 import uic
 from PyQt5.QtGui import QIcon
@@ -69,6 +75,7 @@ class MainWindow(QMainWindow):
         self._can_interface = None
         self._handle = None
         self._status = None
+        self._stop_flag = False
 
         self._can_interface = WindowsUSBCANInterface(self)
 
@@ -81,6 +88,9 @@ class MainWindow(QMainWindow):
         self._read = self.findChild(QPushButton, "cmd_read")
         self._file = self.findChild(QPushButton, "cmd_file")
         self._status = self.findChild(QPushButton, "cmd_status")
+        self._stop = self.findChild(QPushButton, "cmd_stop")
+        """self._lab_file = QLabel("Fichier ...")
+        self._layout.addWidget(self._lab_file)"""
 
         # Appel des méthodes des widgets.
         self._open.clicked.connect(self.on_click_open)
@@ -88,39 +98,74 @@ class MainWindow(QMainWindow):
         self._read.clicked.connect(self.on_click_read)
         self._file.clicked.connect(self.on_click_file)
         self._status.clicked.connect(self.on_click_status)
+        self._stop.clicked.connect(self.on_click_stop)
+
+        self._close.setEnabled(False)
+        self._read.setEnabled(False)
+        self._stop.setEnabled(False)
 
         # Ouvre la fenêtre
         self.show()
 
     # ========================== DEBUT DES METHODES =========================================
     def on_click_open(self):
-        print("Bouton cliqué ! Voici un programme d'ouverture.")
-        # défini une instance de la classe
-
         # Appelle cette fonction de manière explicite et la fait passer sur "interface".
         self._handle = self._can_interface.open(CAN_BAUD_250K,
-                                                CANUSB_ACCEPTANCE_MASK_ALL,
+                                                CANUSB_ACCEPTANCE_CODE_ALL,
                                                 CANUSB_ACCEPTANCE_MASK_ALL,
                                                 CANUSB_FLAG_TIMESTAMP)
         print(f"Résultat de l'appel : {self._handle}")
         if self._handle:  # Si l'adaptateur est ouvert.
-           print("C'est ouvert ...........")
+            print("C'est ouvert ...........")
+            self._open.setEnabled(False)
+            self._read.setEnabled(True)
+            self._close.setEnabled(True)
         else:
             QMessageBox.information(self, "OUVERTURE DE L'ADAPTATEUR!", "Vérifiez que vous êtes bien raccordé")
+        return self._handle
 
     def on_click_close(self):
-        print("Bouton 'cmd_close' cliqué !")
-        if self._handle is not None:
+        if self._handle == 256:
+            self._stop_flag = True
             self._can_interface.close()  # Ferme l'adaptateur
 
-            print("Le read est arrêté")
+            print("C'est arrêté.")
             self._reader = None
+            self._open.setEnabled(True)
+            self._close.setEnabled(False)
+            self._read.setEnabled(False)
+
+    def on_click_stop(self):
+        self._stop_flag = True
+        self._read.setEnabled(True)
+        self._stop.setEnabled(False)
+
+    async def read(self):
+        print("On est entré dans la boucle de lecture.")
+        self._read.setEnabled(False)
+        self._stop.setEnabled(True)
+
+        # Boucle tant que `self._stop_flag` est False
+        while not self._stop_flag:
+            try:
+                # Attendre qu'un message CAN soit lu de manière non-bloquante
+                msg = await self._can_interface.read(self._stop_flag)
+
+                # Traitez le message après réception
+                if msg:
+                    print("Message CAN reçu :", msg)
+
+            except Exception as e:
+                # Gestion des erreurs pendant la lecture
+                print(f"Erreur pendant la lecture CAN : {e}")
+
+    async def main(self):
+        await self.read()
 
     def on_click_read(self):
-        print("Bouton cliqué ! Voici votre programme de lecture.")
-        if self._handle:
-            # Appelle la fonction de lecture en temps réel. À modifier pour qu'elle se fasse en temps réel par asyncio.
-            self._reader = self._can_interface.read(self._stop_flag)
+        self._stop_flag = False
+        if self._handle == 256:
+            asyncio.ensure_future(self.main())
 
     def on_click_status(self):
         try:
@@ -137,9 +182,64 @@ class MainWindow(QMainWindow):
             print(f"self._FenetreStatus.remplir_treeview(self._status) : {e}")
 
     def on_click_file(self):
-        print("Bouton 'cmd_fichier' cliqué !")
+        # Boîte de dialogue pour sélectionner un fichier ou en définir un nouveau
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Ouvrir ou Créer un Fichier",  # Titre de la boîte de dialogue
+            "",  # Dossier initial
+            "Fichier texte (*.txt);;Tous les fichiers (*.*)"  # Types de fichiers filtres
+        )
+
+        if file_path:  # Vérifie si un fichier a été sélectionné
+            # Si le fichier n'existe pas, le créer
+            if not os.path.exists(file_path):
+                with open(file_path, "w") as file:
+                    file.write("")  # Crée un fichier vide
+                print(f"Fichier créé : {file_path}")
+                self.lab_file.setText(str(file_path))
+
+
+            else:
+                print(f"Fichier ouvert : {file_path}")
+                self.lab_file.setText(str(file_path))
+
+        else:
+            print("Aucun fichier sélectionné.")
+            self.lab_file.setText("Aucun fichier sélectionné ")
+
     # ========================== FIN DES METHODES =========================================
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+
+    # Intégration asyncio avec PyQt5
+    loop = QEventLoop(app)
+    asyncio.set_event_loop(loop)
+
+    window = MainWindow()
+
+    # Exemple d'appel d'une fonction async
+#    asyncio.ensure_future(window.async_task_example())
+
+    # Intégration avec la boucle PyQt5
+    with loop:
+        loop.run_forever()
+
+"""
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+
+    # Démarrer asyncio sans bloquer PyQt5
+    
+    loop = asyncio.get_event_loop()
+    loop.run_forever()
+    app.exec_()
+
+
 
 app = QApplication(sys.argv)
 window = MainWindow()
 app.exec_()
+"""
