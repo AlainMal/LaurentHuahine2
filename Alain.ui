@@ -190,7 +190,7 @@ font: 12pt &quot;Segoe UI&quot;;</string>
      </rect>
     </property>
     <property name="text">
-     <string>Nombre de trames</string>
+     <string>Nombre de trames recues</string>
     </property>
    </widget>
    <widget class="QLabel" name="lab_file">

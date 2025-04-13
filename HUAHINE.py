@@ -129,7 +129,7 @@ class MainWindow(QMainWindow):
         self._stop_flag = True
         self.close()
 
-    def on_click_open(self):
+    def on_click_open(self) -> int:
         # Appelle cette fonction de manière explicite et la fait passer sur "interface".
         self._handle = self._can_interface.open(CAN_BAUD_250K,
                                                 CANUSB_ACCEPTANCE_CODE_ALL,
@@ -145,7 +145,8 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, "OUVERTURE DE L'ADAPTATEUR!", "Vérifiez que vous êtes bien raccordé")
         return self._handle
 
-    def on_click_close(self):
+    def on_click_close(self) -> None:
+
         self._stop_flag = True
         if self._handle == 256:
             self._can_interface.close()  # Ferme l'adaptateur
@@ -156,6 +157,7 @@ class MainWindow(QMainWindow):
             self._stop.setEnabled(False)
             self._stop_flag = False
             self._handle = None
+        return None
 
     def on_click_stop(self):
         self._stop_flag = True
@@ -181,24 +183,27 @@ class MainWindow(QMainWindow):
                 print(f"Erreur pendant la lecture CAN : {e}")
 
     # Méthode qui gére le read()
-    async def main(self):
-        # Attent le résulat du read, qui ne revoit rien, car elle tourne en permanence.
+    async def main(self) -> None:
+        # Attent le résulat du read, qui ne revoit rien,
+        # car elle tourne en permanence.
         self._read.setEnabled(False)
         self._stop.setEnabled(True)
         await self.read()
 
     # Méthode sur clique, mêt le fonction "main()" asynchone en route
-    def on_click_read(self):
+    def on_click_read(self) -> None:
         self._stop_flag = False
         if self._handle == 256:
             asyncio.ensure_future(self.main())
 
-    def on_check_file_changed(self,state):
+    def on_check_file_changed(self,state) :
         if state == Qt.Checked and not self._file_path:
              # La remet décochée
             QMessageBox.information(self, "ENREGISTREMENT", "Veuillez choisir un fichier avant de l'activer.")
-            self.check_file.setChecked(False)
             # self._file.setfocus()
+            self.check_file.setChecked(False)
+
+            return self.check_file
 
     # Méthode pour ouvrir un fichier
     def on_click_file(self):
