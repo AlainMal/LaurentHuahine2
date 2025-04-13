@@ -6,8 +6,8 @@ from qasync import QEventLoop
 
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QLineEdit,QTableView, QDateEdit,
                              QHeaderView,QMessageBox, QAction, QFileDialog,
-                             QAbstractItemView, QTreeWidget,QTreeWidgetItem,QLabel)
-from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex
+                             QAbstractItemView, QTreeWidget,QTreeWidgetItem)
+
 from PyQt5 import uic
 from PyQt5.QtGui import QIcon
 
@@ -15,6 +15,7 @@ from Package.CANUSB import  WindowsUSBCANInterface, CanError
 from Package.constante import *
 from Package.NMEA_2000 import *
 from Package.VoirResult import *
+from Package.TraitementCAN import TraitementCAN
 
 # ************************************ FENETRE DU STATUS ***************************************************************
 class FenetreStatus(QMainWindow):
@@ -68,7 +69,10 @@ class FenetreStatus(QMainWindow):
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow,self).__init__()
+        self._file_path = None
         self.setWindowIcon(QIcon("d:/alain/ps2.png"))
+        self._traitement_can = TraitementCAN()
+
         #Chargement du formulaire.
         self._FenetreStatus = None
         self._can_interface = None
@@ -97,10 +101,12 @@ class MainWindow(QMainWindow):
         self._status.clicked.connect(self.on_click_status)
         self._stop.clicked.connect(self.on_click_stop)
 
+        # Initialisent les  boutons à False'
         self._close.setEnabled(False)
         self._read.setEnabled(False)
         self._stop.setEnabled(False)
 
+        # Initialise les boutons du menu<
         self.actionQuitter.triggered.connect(self.close_both)
         # Ouvre la fenêtre
         self.show()
@@ -114,7 +120,7 @@ class MainWindow(QMainWindow):
             self.fenetre_status.close()
             self.fenetre_status = None
 
-            # Fermer la fenêtre courante
+        # Fermer la fenêtre courante
         print("Fermeture de la fenêtre principale")
         self.close()
 
@@ -151,7 +157,7 @@ class MainWindow(QMainWindow):
         self._stop.setEnabled(False)
         print("C'est Arrêté ...")
 
-    # Méthode du read sur dll, boucle tout le temps.
+    # Méthode Asynchrone du read sur dll, boucle tout le temps. c'est une coroutine.
     async def read(self):
         print("On est entré dans la boucle de lecture.")
         self._read.setEnabled(False)
@@ -159,21 +165,12 @@ class MainWindow(QMainWindow):
         # Boucle tant que `self._stop_flag` est False
         while not self._stop_flag:
             try:
-                # Attendre qu'un message CAN soit lu de manière non-bloquante
+                # Attendre qu'un message CAN soit lu de manière non-bloquante, c'est dû à l'await.
                 msg = await self._can_interface.read(self._stop_flag)
 
-                # Traiter le message après réception
-                if msg:
-                    if self.check_file.isChecked():
-                        print("Message CAN reçu :", msg)
-                        datas = ""
-                        # On va définir les octets dans "datas".
-                        for i in range(self._msg.len):
-                            # On commence par un espace, car ça fini par le dernier octet.
-                            datas += " " + format(self._msg.data[i], "02X")
-                            # On ne met pas d'espace entre len et datas, voir les datas ci-dessus.
-                            with open(self._file_path, "w") as file:
-                                file.write(f"{self._msg.TimeStamp} {self._msg.ID:08X} {self._msg.len:08X}{datas}\n")
+                # Si on à la case à cocher, on enregistre.
+                if msg and self.check_file.isChecked():
+                    await self._traitement_can.enregistrer(msg,self._file_path)
 
             except Exception as e:
                 # Gestion des erreurs pendant la lecture
@@ -181,7 +178,7 @@ class MainWindow(QMainWindow):
 
     # Méthode qui gére le read()
     async def main(self):
-        #Attent le résulat du read
+        # Attent le résulat du read, qui ne revoit rien, car elle tourne en permanence.
         await self.read()
 
     # Méthode sur clique, mêt le fonction "main()" asynchone en route
@@ -189,19 +186,6 @@ class MainWindow(QMainWindow):
         self._stop_flag = False
         if self._handle == 256:
             asyncio.ensure_future(self.main())
-
-    # Méthode pour ouvrir la fenêtre Status
-    def on_click_status(self):
-        try:
-            self._FenetreStatus = None
-            if not self._FenetreStatus:
-                self._status = self._can_interface.status()
-                print("STATUS = " +str(self._status))
-                self._FenetreStatus = FenetreStatus(self._status)
-
-            self._FenetreStatus.show()
-        except Exception as e:
-            print(f"self._FenetreStatus.remplir_treeview(self._status) : {e}")
 
     # Méthode pour ouvrir un fichier
     def on_click_file(self):
@@ -225,7 +209,19 @@ class MainWindow(QMainWindow):
                 self.lab_file.setText(str(self._file_path))
         else:
             print("Aucun fichier sélectionné.")
-            self.lab_file.setText("Aucun fichier sélectionné ")
+
+    # Méthode pour ouvrir la fenêtre des Status.
+    def on_click_status(self):
+        try:
+            self._FenetreStatus = None
+            if not self._FenetreStatus:
+                self._status = self._can_interface.status()
+                print("STATUS = " +str(self._status))
+                self._FenetreStatus = FenetreStatus(self._status)
+
+            self._FenetreStatus.show()
+        except Exception as e:
+            print(f"self._FenetreStatus.remplir_treeview(self._status) : {e}")
     # ========================== FIN DES METHODES =========================================
 
 
