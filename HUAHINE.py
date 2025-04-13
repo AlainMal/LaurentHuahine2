@@ -5,14 +5,14 @@ from qasync import QEventLoop
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QLineEdit,QTableView, QDateEdit,
                              QHeaderView,QMessageBox, QAction, QFileDialog,
                              QAbstractItemView, QTreeWidget,QTreeWidgetItem)
+from PyQt5.QtWidgets import QApplication, QMainWindow
+import sys
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
 from PyQt5.QtGui import QIcon
 from Package.CANUSB import  WindowsUSBCANInterface, CanError
 from Package.constante import *
-from Package.NMEA_2000 import *
-from Package.VoirResult import *
-from Package.TraitementCAN import TraitementCAN
+from Package.TraitementCAN import TraitementCAN, TableModel
 
 # ************************************ FENETRE DU STATUS ***************************************************************
 class FenetreStatus(QMainWindow):
@@ -99,10 +99,11 @@ class MainWindow(QMainWindow):
         self._status.clicked.connect(self.on_click_status)
         self._stop.clicked.connect(self.on_click_stop)
         self.check_file.stateChanged.connect(self.on_check_file_changed)
-        """ Attend la class pour définir 
+        # Attend la class pour définir
+
         self.model = TableModel()
         self.table_can.setModel(self.model)  # "table_can" vient du fichier .ui configuré dans Qt Designer
-        """
+
         # Initialisent les boutons à False'
         self._close.setEnabled(False)
         self._read.setEnabled(False)
@@ -154,6 +155,7 @@ class MainWindow(QMainWindow):
             self._read.setEnabled(False)
             self._stop.setEnabled(False)
             self._stop_flag = False
+            self._handle = None
 
     def on_click_stop(self):
         self._stop_flag = True
@@ -235,7 +237,10 @@ class MainWindow(QMainWindow):
                 print("STATUS = " +str(self._status))
                 self._fenetre_status = FenetreStatus(self._status)
 
+            if not self._handle:
+                QMessageBox.information(self, "STAUS", "Il n'y a de status,\ncar vous n'êtes pas raccordé.")
             self._fenetre_status.show()
+
         except Exception as e:
             print(f"self._FenetreStatus.remplir_treeview(self._status) : {e}")
     # ========================== FIN DES METHODES =========================================
