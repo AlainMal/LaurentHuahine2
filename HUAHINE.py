@@ -99,7 +99,10 @@ class MainWindow(QMainWindow):
         self._status.clicked.connect(self.on_click_status)
         self._stop.clicked.connect(self.on_click_stop)
         self.check_file.stateChanged.connect(self.on_check_file_changed)
-
+        """ Attend la class pour définir 
+        self.model = LargeTableModel()
+        self.table_can.setModel(self.model)  # "table_can" vient du fichier .ui configuré dans Qt Designer
+        """
         # Initialisent les boutons à False'
         self._close.setEnabled(False)
         self._read.setEnabled(False)

@@ -5,7 +5,7 @@ import sys
 from PyQt5.uic import loadUi
 
 
-class LargeTableModel(QAbstractTableModel):
+class TableModel(QAbstractTableModel):
     """
     Modèle optimisé pour afficher des trames (32 octets sous forme de str).
     """
@@ -68,7 +68,7 @@ class MainWindow(QMainWindow):
         loadUi('Alain.ui', self)
 
         # Configurer la table
-        self.model = LargeTableModel()
+        self.model = TableModel()
         self.table_can.setModel(self.model)  # "table_can" vient du fichier .ui configuré dans Qt Designer
         self.configure_table()
 
