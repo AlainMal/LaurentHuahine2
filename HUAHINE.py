@@ -12,6 +12,7 @@ from Package.CANUSB import WindowsUSBCANInterface, CanMsg
 from Package.constante import *
 from Package.TraitementCAN import TraitementCAN, TableModel
 
+
 # ************************************ FENETRE DU STATUS ***************************************************************
 class FenetreStatus(QMainWindow):
     def __init__(self, status):
