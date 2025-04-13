@@ -18,7 +18,7 @@ class LargeTableModel(QAbstractTableModel):
         return len(self.trames)  # Retourne le nombre de lignes dans la table
 
     def columnCount(self, parent=None):
-        return 2  # Une seule colonne pour afficher les trames
+        return 2  # Deux colonnes pour afficher les trames
 
     def data(self, index, role=Qt.DisplayRole):
         # Vérifie si l'index est valide
