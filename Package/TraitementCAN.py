@@ -1,6 +1,3 @@
-import asyncio
-from Package.CANUSB import CanMsg
-
 class TraitementCAN:
     def __init__(self):
           pass

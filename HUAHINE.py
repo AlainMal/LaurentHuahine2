@@ -7,6 +7,7 @@ from qasync import QEventLoop
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QLineEdit,QTableView, QDateEdit,
                              QHeaderView,QMessageBox, QAction, QFileDialog,
                              QAbstractItemView, QTreeWidget,QTreeWidgetItem)
+from PyQt5.QtCore import Qt
 
 from PyQt5 import uic
 from PyQt5.QtGui import QIcon
@@ -69,6 +70,7 @@ class FenetreStatus(QMainWindow):
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow,self).__init__()
+        self.fenetre_status = None
         self._file_path = None
         self.setWindowIcon(QIcon("d:/alain/ps2.png"))
         self._traitement_can = TraitementCAN()
@@ -100,6 +102,7 @@ class MainWindow(QMainWindow):
         self._file.clicked.connect(self.on_click_file)
         self._status.clicked.connect(self.on_click_status)
         self._stop.clicked.connect(self.on_click_stop)
+        self.check_file.stateChanged.connect(self.on_check_file_changed)
 
         # Initialisent les  boutons à False'
         self._close.setEnabled(False)
@@ -187,17 +190,26 @@ class MainWindow(QMainWindow):
         if self._handle == 256:
             asyncio.ensure_future(self.main())
 
+    def on_check_file_changed(self,state):
+        if state == Qt.Checked and not self._file_path:
+            self.check_file.setChecked(False)  # La remet décochée
+            QMessageBox.information(self, "ENREGISTREMENT", "Veuillez choisir un fichier avant de l'activer.")
+
     # Méthode pour ouvrir un fichier
     def on_click_file(self):
+        previous_file_path = self._file_path
+
         # Boîte de dialogue pour sélectionner un fichier ou en définir un nouveau
-        self._file_path, _ = QFileDialog.getSaveFileName(
+        selected_file_path, _ = QFileDialog.getSaveFileName(
             self,
             "Ouvrir ou Créer un Fichier",  # Titre de la boîte de dialogue
-            "",  # Dossier initial
+            self._file_path if self._file_path else ""
+            ,  # Dossier initial
             "Fichier texte (*.txt);;Tous les fichiers (*.*)"  # Types de fichiers filtres
         )
 
-        if self._file_path:  # Vérifie si un fichier a été sélectionné
+        if selected_file_path:
+            self._file_path = selected_file_path
             # Si le fichier n'existe pas, le créer
             if not os.path.exists(self._file_path):
                 with open(self._file_path, "w") as file:
@@ -208,6 +220,7 @@ class MainWindow(QMainWindow):
                 print(f"Fichier ouvert : {self._file_path}")
                 self.lab_file.setText(str(self._file_path))
         else:
+            self._file_path = previous_file_path
             print("Aucun fichier sélectionné.")
 
     # Méthode pour ouvrir la fenêtre des Status.
