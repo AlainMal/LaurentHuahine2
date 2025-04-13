@@ -1,10 +1,13 @@
+from typing import Any, Coroutine
+
 from PyQt5.QtCore import Qt, QAbstractTableModel
 
 class TraitementCAN:
     def __init__(self):
           pass
 
-    async def enregistrer(self,msg,file_path):
+    @staticmethod
+    async def enregistrer(msg, file_path)-> None:
         # print("Message CAN reçu :", msg)
         datas = ""
         # On va définir les octets dans "datas".

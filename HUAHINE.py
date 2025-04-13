@@ -1,16 +1,14 @@
-import sys
 import asyncio
 import os
-from qasync import QEventLoop
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QLineEdit,QTableView, QDateEdit,
-                             QHeaderView,QMessageBox, QAction, QFileDialog,
-                             QAbstractItemView, QTreeWidget,QTreeWidgetItem)
-from PyQt5.QtWidgets import QApplication, QMainWindow
 import sys
+
+from qasync import QEventLoop
+from PyQt5.QtWidgets import QPushButton, QTableView, QMessageBox, QFileDialog, QTreeWidget, QTreeWidgetItem, QWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
 from PyQt5.QtGui import QIcon
-from Package.CANUSB import  WindowsUSBCANInterface, CanError
+from Package.CANUSB import WindowsUSBCANInterface, CanMsg
 from Package.constante import *
 from Package.TraitementCAN import TraitementCAN, TableModel
 
@@ -109,8 +107,9 @@ class MainWindow(QMainWindow):
         self._read.setEnabled(False)
         self._stop.setEnabled(False)
 
-        # Initialise les boutons du menu<
+        # Initialise les boutons du menu.
         self.actionQuitter.triggered.connect(self.close_both)
+
         # Ouvre la fenêtre
         self.show()
 
@@ -166,10 +165,10 @@ class MainWindow(QMainWindow):
         print("C'est Arrêté ...")
 
     # Méthode Asynchrone du read sur dll, boucle tout le temps. c'est une coroutine.
-    async def read(self):
+    async def read(self) -> CanMsg | None:
         print("On est entré dans la boucle de lecture.")
         # Boucle tant que `self._stop_flag` est False
-        while not self._stop_flag:
+        while not self._stop_flag :
             try:
                 # Attendre qu'un message CAN soit lu de manière non-bloquante, c'est dû à l'await.
                 msg = await self._can_interface.read(self._stop_flag)
@@ -177,6 +176,7 @@ class MainWindow(QMainWindow):
                 # Si on à la case à cocher, on enregistre.
                 if msg and self.check_file.isChecked():
                     await self._traitement_can.enregistrer(msg,self._file_path)
+                return msg
 
             except Exception as e:
                 # Gestion des erreurs pendant la lecture
@@ -206,7 +206,7 @@ class MainWindow(QMainWindow):
             return self.check_file
 
     # Méthode pour ouvrir un fichier
-    def on_click_file(self):
+    def on_click_file(self) -> os.path:
         __previous_file_path = self._file_path
 
         # Boîte de dialogue pour sélectionner un fichier ou en définir un nouveau
@@ -234,7 +234,7 @@ class MainWindow(QMainWindow):
             print("Aucun fichier sélectionné.")
 
     # Méthode pour ouvrir la fenêtre des Status.
-    def on_click_status(self):
+    def on_click_status(self) -> QMainWindow:
         try:
             self._fenetre_status = None
             if not self._fenetre_status:
