@@ -1,17 +1,13 @@
 import sys
 import asyncio
 import os
-
 from qasync import QEventLoop
-
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QLineEdit,QTableView, QDateEdit,
                              QHeaderView,QMessageBox, QAction, QFileDialog,
                              QAbstractItemView, QTreeWidget,QTreeWidgetItem)
 from PyQt5.QtCore import Qt
-
 from PyQt5 import uic
 from PyQt5.QtGui import QIcon
-
 from Package.CANUSB import  WindowsUSBCANInterface, CanError
 from Package.constante import *
 from Package.NMEA_2000 import *
@@ -70,13 +66,12 @@ class FenetreStatus(QMainWindow):
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow,self).__init__()
-        self.fenetre_status = None
+        self._fenetre_status = None
         self._file_path = None
         self.setWindowIcon(QIcon("d:/alain/ps2.png"))
         self._traitement_can = TraitementCAN()
 
         #Chargement du formulaire.
-        self._FenetreStatus = None
         self._can_interface = None
         self._handle = None
         self._status = None
@@ -87,7 +82,8 @@ class MainWindow(QMainWindow):
         # Importe l'UI fais avec le designer
         uic.loadUi('Alain.ui', self)
 
-        # Variable pour les objets (Boutons, case à cocher, etc.),
+        # Variable pour les objets (Boutons, case à cocher, etc.)
+        self._table = self.findChild(QTableView, 'table_can')
         self._open = self.findChild(QPushButton, "cmd_open")
         self._close = self.findChild(QPushButton, "cmd_close")
         self._read = self.findChild(QPushButton, "cmd_read")
@@ -104,7 +100,7 @@ class MainWindow(QMainWindow):
         self._stop.clicked.connect(self.on_click_stop)
         self.check_file.stateChanged.connect(self.on_check_file_changed)
 
-        # Initialisent les  boutons à False'
+        # Initialisent les boutons à False'
         self._close.setEnabled(False)
         self._read.setEnabled(False)
         self._stop.setEnabled(False)
@@ -119,12 +115,14 @@ class MainWindow(QMainWindow):
     def close_both(self):
         print("Fermeture des fenêtres...")
         # Fermer FenetreStatus si elle est ouverte
-        if self.fenetre_status is not None:
-            self.fenetre_status.close()
-            self.fenetre_status = None
+        if self._fenetre_status is not None:
+            print("Fermeture de la fenetre_status")
+            self._fenetre_status.close()
+            self._fenetre_status = None
 
         # Fermer la fenêtre courante
         print("Fermeture de la fenêtre principale")
+        self._stop_flag = True
         self.close()
 
     def on_click_open(self):
@@ -163,8 +161,6 @@ class MainWindow(QMainWindow):
     # Méthode Asynchrone du read sur dll, boucle tout le temps. c'est une coroutine.
     async def read(self):
         print("On est entré dans la boucle de lecture.")
-        self._read.setEnabled(False)
-        self._stop.setEnabled(True)
         # Boucle tant que `self._stop_flag` est False
         while not self._stop_flag:
             try:
@@ -182,6 +178,8 @@ class MainWindow(QMainWindow):
     # Méthode qui gére le read()
     async def main(self):
         # Attent le résulat du read, qui ne revoit rien, car elle tourne en permanence.
+        self._read.setEnabled(False)
+        self._stop.setEnabled(True)
         await self.read()
 
     # Méthode sur clique, mêt le fonction "main()" asynchone en route
@@ -192,12 +190,14 @@ class MainWindow(QMainWindow):
 
     def on_check_file_changed(self,state):
         if state == Qt.Checked and not self._file_path:
-            self.check_file.setChecked(False)  # La remet décochée
+             # La remet décochée
             QMessageBox.information(self, "ENREGISTREMENT", "Veuillez choisir un fichier avant de l'activer.")
+            self.check_file.setChecked(False)
+            # self._file.setfocus()
 
     # Méthode pour ouvrir un fichier
     def on_click_file(self):
-        previous_file_path = self._file_path
+        __previous_file_path = self._file_path
 
         # Boîte de dialogue pour sélectionner un fichier ou en définir un nouveau
         selected_file_path, _ = QFileDialog.getSaveFileName(
@@ -220,19 +220,19 @@ class MainWindow(QMainWindow):
                 print(f"Fichier ouvert : {self._file_path}")
                 self.lab_file.setText(str(self._file_path))
         else:
-            self._file_path = previous_file_path
+            self._file_path = __previous_file_path
             print("Aucun fichier sélectionné.")
 
     # Méthode pour ouvrir la fenêtre des Status.
     def on_click_status(self):
         try:
-            self._FenetreStatus = None
-            if not self._FenetreStatus:
+            self._fenetre_status = None
+            if not self._fenetre_status:
                 self._status = self._can_interface.status()
                 print("STATUS = " +str(self._status))
-                self._FenetreStatus = FenetreStatus(self._status)
+                self._fenetre_status = FenetreStatus(self._status)
 
-            self._FenetreStatus.show()
+            self._fenetre_status.show()
         except Exception as e:
             print(f"self._FenetreStatus.remplir_treeview(self._status) : {e}")
     # ========================== FIN DES METHODES =========================================

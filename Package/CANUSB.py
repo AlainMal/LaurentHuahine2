@@ -3,6 +3,8 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
 from ctypes import Structure, c_ubyte,c_long, c_int, POINTER
+from typing import Any, Coroutine
+
 from Package.constante import *
 
 
@@ -74,7 +76,7 @@ class WindowsUSBCANInterface:
                 self.executor,
                 self._dll.canusb_Read,
                 self._handle,
-                ctypes.byref(self.msg)  # Paramètres passés à la fonction native
+                    ctypes.byref(self.msg)  # Paramètres passés à la fonction native
             )
 
             # Résultat du CAN : on sort si une trame a été reçue : result=1. Sinon il a des valeurs négatives dont le -7 qui indtque qu'il n'a pas reçy de tramrs.
@@ -85,7 +87,7 @@ class WindowsUSBCANInterface:
         await asyncio.sleep(0.01)
 
         # Une fois une trame reçue, on la retourne
-        # return self.msg  # Retourne le CanMsg dont on aura besoin pour l'enregistrer
+        return self.msg  # Retourne le CanMsg dont on aura besoin pour l'enregistrer
 
     # Fonction de fermeture de l'adaptateur.
     def close(self):
