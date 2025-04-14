@@ -47,7 +47,10 @@ class WindowsUSBCANInterface:
         self._handle = None
 
     # Fonction d'ouverture de l'adaptateur. Cette fonction est appelé par le bouton "OPEN".
-    def open(self, bitrate=CAN_BAUD_250K, acceptance_code=CANUSB_ACCEPTANCE_CODE_ALL, acceptance_mask=CANUSB_ACCEPTANCE_MASK_ALL, flags=CANUSB_FLAG_TIMESTAMP):
+    def open(self, bitrate=CAN_BAUD_250K,
+             acceptance_code=CANUSB_ACCEPTANCE_CODE_ALL,
+             acceptance_mask=CANUSB_ACCEPTANCE_MASK_ALL,
+             flags=CANUSB_FLAG_TIMESTAMP):
         # Ouvre l'adapateur par l'instance
         self._handle = self._dll.canusb_Open(None, bitrate, acceptance_code, acceptance_mask, flags)
         if self._handle is None:
