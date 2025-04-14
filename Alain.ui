@@ -27,10 +27,13 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>C:/Users/alain/.designer/ps2.png</normaloff>C:/Users/alain/.designer/ps2.png</iconset>
+    <normaloff>../ps2.png</normaloff>../ps2.png</iconset>
   </property>
   <property name="styleSheet">
    <string notr="true">background-color: rgb(255, 170, 127);</string>
+  </property>
+  <property name="animated">
+   <bool>false</bool>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPushButton" name="cmd_file">

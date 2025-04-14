@@ -70,21 +70,24 @@ class WindowsUSBCANInterface:
         # Boucle pour attendre les trames CAN.
         while not stop_flag:
             if self._handle is None:
-                self._handle = 0    # Marquer le handle comme inactif
-
+                self._handle = 0    # Marquer le handle comme inactif en entier
             result = await asyncio.get_event_loop().run_in_executor(
                 self.executor,
                 self._dll.canusb_Read,
                 self._handle,
-                    ctypes.byref(self.msg)  # Paramètres passés à la fonction native
+                    ctypes.byref(self.msg)  # Paramètres passés par référence à la fonction native
             )
-
-            # Résultat du CAN : on sort si une trame a été reçue : result=1. Sinon il a des valeurs négatives dont le -7 qui indtque qu'il n'a pas reçy de tramrs.
+            # Résultat du CAN : on sort si une trame a été reçue : result=1.
+            # Sinon il a des valeurs négatives qui représente différent défaut,
+            # dont le -7 qui indtque qu'il n'a pas reçu de tramrs.
+            if result <= -2 and result != -7:
+                # On ne traite pas les défauts, mais on le signale.
+                print("Défaut CAN : ", str(result))
             if result == 1:
                 break
 
         # On attend 10ms pour éviter le blocage complet de la boucle asyncio. Peut-être supprimé ?
-        await asyncio.sleep(0.01)
+        # await asyncio.sleep(0.01)
 
         # Une fois une trame reçue, on la retourne
         return self.msg  # Retourne le CanMsg dont on aura besoin pour l'enregistrer

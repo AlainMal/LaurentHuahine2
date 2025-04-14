@@ -7,7 +7,7 @@ class TraitementCAN:
           pass
 
     @staticmethod
-    async def enregistrer(msg, file_path)-> None:
+    async def enregistrer(msg, file_path, coche):
         # print("Message CAN reçu :", msg)
         datas = ""
         # On va définir les octets dans "datas".
@@ -15,8 +15,9 @@ class TraitementCAN:
             # On commence par un espace, car ça fini par le dernier octet.
             datas += " " + format(msg.data[i], "02X")
             # On ne met pas d'espace entre len et datas, voir les datas ci-dessus.
-            with open(file_path, "w") as file:
-                file.write(f"{msg.TimeStamp} {msg.ID:08X} {msg.len:08X}{datas}\n")
+            if msg and coche:
+                with open(file_path, "w") as file:
+                    file.write(f"{msg.TimeStamp} {msg.ID:08X} {msg.len}{datas}\n")
 
 class TableModel(QAbstractTableModel):
     """

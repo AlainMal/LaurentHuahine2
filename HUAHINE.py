@@ -115,6 +115,13 @@ class MainWindow(QMainWindow):
         self.show()
 
     # ========================== DEBUT DES METHODES =========================================
+    # Métode sur fermeture de la fenêtre
+    def closeEvent(self, event):
+        # Appelle la méthode `close_both` pour gérer la fermeture proprement
+        self.close_both()
+        # Accepte l'événement pour continuer la fermeture
+        event.accept()
+
     # Métode sur l'action sur la menu Quitter, on ferme tous.
     def close_both(self):
         print("Fermeture des fenêtres...")
@@ -165,19 +172,20 @@ class MainWindow(QMainWindow):
         self._stop.setEnabled(False)
         print("C'est Arrêté ...")
 
-    # Méthode Asynchrone du read sur dll, boucle tout le temps. c'est une coroutine.
-    async def read(self) -> CanMsg | None:
+    # Méthode Asynchrone du read sur dll, boucle tout le temps et c'est une coroutine.
+    async def read(self):
         print("On est entré dans la boucle de lecture.")
+        n = 0
         # Boucle tant que `self._stop_flag` est False
         while not self._stop_flag :
             try:
                 # Attendre qu'un message CAN soit lu de manière non-bloquante, c'est dû à l'await.
                 msg = await self._can_interface.read(self._stop_flag)
-
-                # Si on à la case à cocher, on enregistre.
-                if msg and self.check_file.isChecked():
-                    await self._traitement_can.enregistrer(msg,self._file_path)
-                return msg
+                n += 1
+                self.lab_trame.setText(str(n))  # Affiche le nombre de trames reçues.
+                # On enregistre
+                await self._traitement_can.enregistrer(msg,self._file_path,self.check_file.isChecked())
+                # return msg
 
             except Exception as e:
                 # Gestion des erreurs pendant la lecture
@@ -244,7 +252,7 @@ class MainWindow(QMainWindow):
                 self._fenetre_status = FenetreStatus(self._status)
 
             if not self._handle:
-                QMessageBox.information(self, "STAUS", "Il n'y a de status,\ncar vous n'êtes pas raccordé.")
+                QMessageBox.information(self, "STAUS", "Il n'y a pas de status,\ncar vous n'êtes pas raccordé.")
             self._fenetre_status.show()
 
         except Exception as e:
