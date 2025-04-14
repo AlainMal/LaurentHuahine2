@@ -1,10 +1,7 @@
 import ctypes
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-
 from ctypes import Structure, c_ubyte,c_long, c_int, POINTER
-from typing import Any, Coroutine
-
 from Package.constante import *
 
 
@@ -17,14 +14,11 @@ class CanMsg(Structure):
         ("data", c_ubyte *8)
     )
 
-
-class CanError(Exception):
-    pass
-
 # Défini les fonctions de la dll.
 class WindowsUSBCANInterface:
 
     def __init__(self, stop_flag):
+        self._etat = None
         self.msg = None
         self._stop_flag = stop_flag
         self.executor = ThreadPoolExecutor()

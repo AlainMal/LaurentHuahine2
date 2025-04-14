@@ -6,19 +6,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>627</width>
+    <width>620</width>
     <height>480</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>627</width>
+    <width>620</width>
     <height>480</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>627</width>
+    <width>620</width>
     <height>480</height>
    </size>
   </property>
@@ -27,7 +27,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../ps2.png</normaloff>../ps2.png</iconset>
+    <normaloff>C:/Users/alain/.designer/ps2.png</normaloff>C:/Users/alain/.designer/ps2.png</iconset>
   </property>
   <property name="styleSheet">
    <string notr="true">background-color: rgb(255, 170, 127);</string>
@@ -127,19 +127,6 @@ font: 12pt &quot;Segoe UI&quot;;</string>
      <string>Etats</string>
     </property>
    </widget>
-   <widget class="QTableView" name="table_can">
-    <property name="geometry">
-     <rect>
-      <x>290</x>
-      <y>10</y>
-      <width>321</width>
-      <height>431</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(234, 234, 234);</string>
-    </property>
-   </widget>
    <widget class="QCheckBox" name="check_file">
     <property name="geometry">
      <rect>
@@ -209,13 +196,41 @@ font: 12pt &quot;Segoe UI&quot;;</string>
      <string>Aucun fichier sélectionné</string>
     </property>
    </widget>
+   <widget class="QWidget" name="verticalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>0</y>
+      <width>321</width>
+      <height>441</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QTableView" name="table_can">
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(85, 255, 255);</string>
+       </property>
+       <attribute name="horizontalHeaderMinimumSectionSize">
+        <number>24</number>
+       </attribute>
+       <attribute name="verticalHeaderVisible">
+        <bool>false</bool>
+       </attribute>
+       <attribute name="verticalHeaderDefaultSectionSize">
+        <number>24</number>
+       </attribute>
+      </widget>
+     </item>
+    </layout>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>627</width>
+     <width>620</width>
      <height>22</height>
     </rect>
    </property>

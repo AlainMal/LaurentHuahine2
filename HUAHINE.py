@@ -3,12 +3,12 @@ import os
 import sys
 
 from qasync import QEventLoop
-from PyQt5.QtWidgets import QPushButton, QTableView, QMessageBox, QFileDialog, QTreeWidget, QTreeWidgetItem, QWidget
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QPushButton, QTableView, QMessageBox, QFileDialog, QTreeWidget, QTreeWidgetItem
+from PyQt5.QtWidgets import QApplication, QMainWindow, QAbstractItemView
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
 from PyQt5.QtGui import QIcon
-from Package.CANUSB import WindowsUSBCANInterface, CanMsg
+from Package.CANUSB import WindowsUSBCANInterface
 from Package.constante import *
 from Package.TraitementCAN import TraitementCAN, TableModel
 
@@ -54,11 +54,11 @@ class FenetreStatus(QMainWindow):
                 designation = element[0]
                 colonne_2 = "X" if (self._status == 0 and index == 0) else ""
 
-                # Ajouter un élément dans le TreeWidget
+                # Ajouter l'élément dans le TreeWidget
                 item = QTreeWidgetItem([designation, colonne_2])
                 self._treewidget.addTopLevelItem(item)
 
-            print("TREEWIDGET INSTALLE")
+            print("TREEWIDGET REMPLI")
 # *************************************** FIN DE LA FENETRE STATUS *****************************************************
 
 # ***************************************** FENETRE PRINCIAPALE ********************************************************
@@ -76,10 +76,11 @@ class MainWindow(QMainWindow):
         self._status = None
         self._stop_flag = False
 
-        self._can_interface = WindowsUSBCANInterface(self)
-
         # Importe l'UI fais avec le designer
+
         uic.loadUi('Alain.ui', self)
+
+        self._can_interface = WindowsUSBCANInterface(self)
 
         # Variable pour les objets (Boutons, case à cocher, etc.)
         self._table = self.findChild(QTableView, 'table_can')
@@ -89,6 +90,7 @@ class MainWindow(QMainWindow):
         self._file = self.findChild(QPushButton, "cmd_file")
         self._status = self.findChild(QPushButton, "cmd_status")
         self._stop = self.findChild(QPushButton, "cmd_stop")
+        self._voir = self.findChild(QPushButton, "cmd_voir")
 
         # Appel des méthodes des widgets.
         self._open.clicked.connect(self.on_click_open)
@@ -97,11 +99,30 @@ class MainWindow(QMainWindow):
         self._file.clicked.connect(self.on_click_file)
         self._status.clicked.connect(self.on_click_status)
         self._stop.clicked.connect(self.on_click_stop)
+        self._voir.clicked.connect(self.on_click_voir)
         self.check_file.stateChanged.connect(self.on_check_file_changed)
+        self.table_can.setSelectionBehavior(QAbstractItemView.SelectRows)
         # Attend la class pour définir
 
         self.model = TableModel()
-        self.table_can.setModel(self.model)  # "table_can" vient du fichier .ui configuré dans Qt Designer
+        self.table_can.setModel(self.model)
+
+        # Configurer les largeurs des colonnes
+        self.configurer_colonnes()
+
+    # ========================== DEBUT DES METHODES =========================================
+    def on_click_voir(self):
+        pass
+
+    # Cette méthode écrit avec addTrame défini dans la classe TableModel()
+    def affiche_trame(self,trame):
+        # Exemple de trame: [("FEA56789", "8", "AB 43 54 56 98 DE F3 23")]
+        self.model.addTrame(trame)
+
+    def configurer_colonnes(self):
+        self.table_can.setColumnWidth(0, 80)  # Largeur de "ID"
+        self.table_can.setColumnWidth(1, 30)  # Largeur de "Len"
+        self.table_can.setColumnWidth(2, 180)  # Largeur de "Data"
 
         # Initialisent les boutons à False'
         self._close.setEnabled(False)
@@ -114,7 +135,6 @@ class MainWindow(QMainWindow):
         # Ouvre la fenêtre
         self.show()
 
-    # ========================== DEBUT DES METHODES =========================================
     # Métode sur fermeture de la fenêtre
     def closeEvent(self, event):
         # Appelle la méthode `close_both` pour gérer la fermeture proprement
@@ -122,7 +142,7 @@ class MainWindow(QMainWindow):
         # Accepte l'événement pour continuer la fermeture
         event.accept()
 
-    # Métode sur l'action sur la menu Quitter, on ferme tous.
+    # Métode sur l'action sur le menu Quitter, on ferme tous.
     def close_both(self):
         print("Fermeture des fenêtres...")
         # Fermer FenetreStatus si elle est ouverte
@@ -183,8 +203,8 @@ class MainWindow(QMainWindow):
                 msg = await self._can_interface.read(self._stop_flag)
                 n += 1
                 self.lab_trame.setText(str(n))  # Affiche le nombre de trames reçues.
-                # On enregistre
-                await self._traitement_can.enregistrer(msg,self._file_path,self.check_file.isChecked())
+                # On enregistre ***********************************************************************VVVV
+                await self._traitement_can.enregistrer(msg,self._file_path,self.check_file.isChecked(),self)
                 # return msg
 
             except Exception as e:
@@ -243,7 +263,7 @@ class MainWindow(QMainWindow):
             print("Aucun fichier sélectionné.")
 
     # Méthode pour ouvrir la fenêtre des Status.
-    def on_click_status(self) -> QMainWindow:
+    def on_click_status(self) :
         try:
             self._fenetre_status = None
             if not self._fenetre_status:
@@ -257,7 +277,7 @@ class MainWindow(QMainWindow):
 
         except Exception as e:
             print(f"self._FenetreStatus.remplir_treeview(self._status) : {e}")
-    # ========================== FIN DES METHODES =========================================
+# ========================== FIN DES METHODES =========================================
 
 
 if __name__ == "__main__":

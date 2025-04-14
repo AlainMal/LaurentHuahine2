@@ -66,7 +66,7 @@ class NMEA2000:
     # ================================== FIN DES METHODES POUR L'ID ====================================================
 
     # ========================== Méthodes de récupération des valeurs des octets =======================================
-    def octets(self,pgn,msg) -> Tuple[str, int, float]:
+    def octets(self,pgn,msg):
         match pgn:
             case 130306:
                 self._valeurChoisie1 = (msg.data[2] << 8 | msg.data[1]) * 0.01 * 1.94384449
