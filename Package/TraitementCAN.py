@@ -7,7 +7,7 @@ class TraitementCAN:
 
     @staticmethod
     async def enregistrer(msg, file_path, coche,main_window):
-        print("tttttt")
+        # print("On entre dans l'enregistement")
         # Initialise data comme un str vide.
         datas = ""
         # On va définir les huits octets dans "datas".
@@ -15,11 +15,16 @@ class TraitementCAN:
             # On commence par un espace, car ça fini par le dernier octet.
             datas += " " + format(msg.data[i], "02X")
 
+
+        # print("On a calculé les octets")
         # on met le résultat dans la table.
+        """
         if msg:
-            trame_list = [(f"{msg.ID:08X}", f"{msg.len} {datas}")]
+            trame_list = [(f"{msg.ID:08X}", f"{msg.len}", f"{datas}")]
+            # print("On a calculé la liste prête à être affiché sur le tableau")
             main_window.affiche_trame(trame_list)
+        """
         # On met le réulltat dans un fichier
         if msg and coche:
-            with open(file_path, "w") as file:
+            with open(file_path, "a") as file:
                 file.write(f"{msg.TimeStamp} {msg.ID:08X} {msg.len}{datas}\n")

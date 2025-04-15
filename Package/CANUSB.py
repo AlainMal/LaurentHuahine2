@@ -15,6 +15,10 @@ class CanMsg(Structure):
     )
 
 # Défini les fonctions de la dll.
+class CanError(Exception):
+    pass
+
+
 class WindowsUSBCANInterface:
 
     def __init__(self, stop_flag):

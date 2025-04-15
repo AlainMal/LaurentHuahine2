@@ -161,6 +161,7 @@ class MainWindow(QMainWindow):
 
     # Cette méthode écrit avec addTrame défini dans la classe TableModel()
     def affiche_trame(self,trame):
+        # print("trame prêt à être ajouté a la table : " + str(trame))
         # Exemple de trame: [("FEA56789", "8", "AB 43 54 56 98 DE F3 23")]
         self.model.addTrame(trame)
 
