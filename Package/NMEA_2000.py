@@ -1,7 +1,5 @@
 import math
-
-from Package.CANUSB import CanMsg
-
+import Package.CANUSB
 
 # **********************************************************************************************************************
 #       Programme d'analyse des trames du bus CAN et les transforment en NMEA 2000
@@ -32,8 +30,8 @@ class NMEA2000:
         self._pgn = None
 
     # ========================== Méthodes de récupération des valeurs dans l'ID ========================================
-    # On récupère le PGN
-    def pgn(self,msg) -> CanMsg:
+    # On récupère le PGN, puis la source puis la detination puis la priorité.
+    def pgn(self,msg) -> Package.CANUSB.CanMsg:
         pf = (msg.ID & 0xFF0000) >> 8
         ps = (msg.ID &  0x00FF00) >> 8
         dp = (msg.ID & 0x1000000) >> 8
