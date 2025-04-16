@@ -74,6 +74,13 @@ class NMEA2000:
     # ========================== Méthodes de récupération des valeurs des octets =======================================
     def octets(self,pgn,datas):
         print("Est bien entré dans octets.")
+        self._pgn1 = None
+        self._pgn2 = None
+        self._pgn3 = None
+        self._valeurChoisieTab = None
+        self._valeurChoisie2 = None
+        self._valeurChoisie1 = None
+        self._valeurChoisie3 = None
         match pgn:
             case 130306:
                 self._valeurChoisie1 = "{:.2f}".format((datas[2] << 8 | datas[1]) * 0.01 * 1.94384449)

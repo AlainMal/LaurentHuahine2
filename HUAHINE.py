@@ -165,11 +165,6 @@ class MainWindow(QMainWindow):
         self.table_can.clicked.connect(self.on_click_table)
         self.table_can.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table_can.setSelectionBehavior(QAbstractItemView.SelectRows)
-        # self.table_can.setSelectionMode(QAbstractItemView.SingleSelection)
-
-        # self.table_can.selectionModel().currentRowChanged.connect(self.on_click_table)
-
-        # Attend la class pour définir
 
         self.model = TableModel()
         self.table_can.setModel(self.model)
@@ -200,7 +195,8 @@ class MainWindow(QMainWindow):
         pgn = self._nmea_2000.id(id)
         print(pgn)
 
-        self.lab_pgn.setText("Issu de l'ID: PGN, Source, Destination, Priorité :\n                     " + str(pgn))
+        self.lab_pgn.setText("Issu de l'ID: PGN, Source, Destination, Priorité :\n                     "
+                             + str(pgn))
 
         # Diffuse le résultat des octets avec leurs définitions.
         if col3:
