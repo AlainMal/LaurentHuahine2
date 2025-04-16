@@ -27,7 +27,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>C:/Users/alain/.designer/ps2.png</normaloff>C:/Users/alain/.designer/ps2.png</iconset>
+    <normaloff>ps2.png</normaloff>ps2.png</iconset>
   </property>
   <property name="styleSheet">
    <string notr="true">background-color: rgb(255, 170, 127);</string>
@@ -61,8 +61,8 @@
    <widget class="QPushButton" name="cmd_close">
     <property name="geometry">
      <rect>
-      <x>100</x>
-      <y>10</y>
+      <x>90</x>
+      <y>20</y>
       <width>71</width>
       <height>41</height>
      </rect>
@@ -74,12 +74,15 @@ font: 12pt &quot;Segoe UI&quot;;</string>
     <property name="text">
      <string>Close</string>
     </property>
+    <property name="icon">
+     <iconset theme="media-eject"/>
+    </property>
    </widget>
    <widget class="QPushButton" name="cmd_open">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>10</y>
+      <y>20</y>
       <width>71</width>
       <height>41</height>
      </rect>
@@ -90,6 +93,9 @@ background-color: rgb(0, 255, 0);</string>
     </property>
     <property name="text">
      <string>Open</string>
+    </property>
+    <property name="icon">
+     <iconset theme="QIcon::ThemeIcon::DocumentOpen"/>
     </property>
    </widget>
    <widget class="QPushButton" name="cmd_read">
@@ -109,6 +115,9 @@ font: 12pt &quot;Segoe UI&quot;;</string>
     <property name="text">
      <string>Read</string>
     </property>
+    <property name="icon">
+     <iconset theme="multimedia-volume-control"/>
+    </property>
    </widget>
    <widget class="QPushButton" name="cmd_status">
     <property name="geometry">
@@ -125,6 +134,9 @@ font: 12pt &quot;Segoe UI&quot;;</string>
     </property>
     <property name="text">
      <string>Etats</string>
+    </property>
+    <property name="icon">
+     <iconset theme="applications-multimedia"/>
     </property>
    </widget>
    <widget class="QCheckBox" name="check_file">
@@ -155,6 +167,9 @@ font: 12pt &quot;Segoe UI&quot;;</string>
     </property>
     <property name="text">
      <string>Arrêter</string>
+    </property>
+    <property name="icon">
+     <iconset theme="QIcon::ThemeIcon::ContactNew"/>
     </property>
    </widget>
    <widget class="QPushButton" name="cmd_voir">
@@ -223,6 +238,41 @@ font: 12pt &quot;Segoe UI&quot;;</string>
       </widget>
      </item>
     </layout>
+   </widget>
+   <widget class="QPushButton" name="cmd_import">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>410</y>
+      <width>75</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 8pt &quot;Segoe UI&quot;;
+font: 6pt &quot;Arial&quot;;
+background-color: rgb(255, 0, 255);
+font: 8pt &quot;Segoe UI&quot;;</string>
+    </property>
+    <property name="text">
+     <string>Importer</string>
+    </property>
+    <property name="icon">
+     <iconset theme="accessories-calculator"/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lab_pgn">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>280</y>
+      <width>281</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Issu de l'ID: PGN, Source, Destination, Priorité :</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

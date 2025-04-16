@@ -18,7 +18,7 @@ class TraitementCAN:
 
         # print("On a calculé les octets")
         # on met le résultat dans la table.
-        """
+        """   Ca ne fonctionne pas car il est trop lent et ça loupe des trames.
         if msg:
             trame_list = [(f"{msg.ID:08X}", f"{msg.len}", f"{datas}")]
             # print("On a calculé la liste prête à être affiché sur le tableau")

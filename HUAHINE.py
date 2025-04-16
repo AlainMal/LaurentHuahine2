@@ -11,12 +11,19 @@ from PyQt5.QtGui import QIcon
 from Package.CANUSB import WindowsUSBCANInterface
 from Package.constante import *
 from Package.TraitementCAN import TraitementCAN
+from Package.NMEA_2000 import NMEA2000
 
 # Cette classe sert de modèle à la table incluse dans MainWindow()
 class TableModel(QAbstractTableModel):
     def __init__(self):
         super().__init__()
         self.data_table = []    # Modéle de data_table sous forme d'une liste
+
+    def clear(self):
+        # Supprime tous les éléments de la table de données
+        self.beginResetModel()  # Notifie la vue d'une réinitialisation des données
+        self.data_table = []  # Vide les données
+        self.endResetModel()  # Permet à la vue de rafraîchir l'interface
 
     def rowCount(self, parent=None):
         return len(self.data_table)  # Retourne le nombre de lignes dans la table
@@ -44,19 +51,22 @@ class TableModel(QAbstractTableModel):
         return None
 
     # Cette méthode ajoute les données à la table, voir dans la classe MainWindows.
-    def addTrame(self, donnees):
-        debut = len(self.data_table)
-        fin = debut + len(donnees) - 1
+    def addTrame(self, donnees, batch_size=1000):
+        total_donnees = len(donnees)
+        for i in range(0, total_donnees, batch_size):
+            batch = donnees[i: i + batch_size]  # Crée un lot, de taille batch_size
 
-        # Notifier le modèle pour commencer l'insertion
-        self.beginInsertRows(QModelIndex(), debut, fin)
+            debut = len(self.data_table)
+            fin = debut + len(batch) - 1
 
-        # Ajouter les données à la liste principale
-        self.data_table.extend(donnees)
+            # Notifier le modèle pour commencer l'insertion
+            self.beginInsertRows(QModelIndex(), debut, fin)
 
-        # Terminer l'insertion
-        self.endInsertRows()
+            # Ajouter les données à la liste principale
+            self.data_table.extend(batch)
 
+            # Terminer l'insertion
+            self.endInsertRows()
 
 # ************************************ FENETRE DU STATUS ***************************************************************
 class FenetreStatus(QMainWindow):
@@ -114,6 +124,9 @@ class MainWindow(QMainWindow):
         self._file_path = None
         self.setWindowIcon(QIcon("d:/alain/ps2.png"))
         self._traitement_can = TraitementCAN()
+        print("avant NMEA2000")
+        self._nmea_2000 = NMEA2000()
+        print("apres NMEA2000" + str(self._nmea_2000))
 
         #Chargement du formulaire.
         self._can_interface = None
@@ -122,7 +135,8 @@ class MainWindow(QMainWindow):
         self._stop_flag = False
 
         # Importe l'UI fais avec le designer
-
+        # self.ui = Ui_MainWindow()
+        # self.ui.setupUi(self)
         uic.loadUi('Alain.ui', self)
 
         self._can_interface = WindowsUSBCANInterface(self)
@@ -136,6 +150,7 @@ class MainWindow(QMainWindow):
         self._status = self.findChild(QPushButton, "cmd_status")
         self._stop = self.findChild(QPushButton, "cmd_stop")
         self._voir = self.findChild(QPushButton, "cmd_voir")
+        self._import = self.findChild(QPushButton, "cmd_import")
 
         # Appel des méthodes des widgets.
         self._open.clicked.connect(self.on_click_open)
@@ -145,8 +160,15 @@ class MainWindow(QMainWindow):
         self._status.clicked.connect(self.on_click_status)
         self._stop.clicked.connect(self.on_click_stop)
         self._voir.clicked.connect(self.on_click_voir)
+        self._import.clicked.connect(self.on_click_import)
         self.check_file.stateChanged.connect(self.on_check_file_changed)
+        self.table_can.clicked.connect(self.on_click_table)
+        self.table_can.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table_can.setSelectionBehavior(QAbstractItemView.SelectRows)
+        # self.table_can.setSelectionMode(QAbstractItemView.SingleSelection)
+
+        # self.table_can.selectionModel().currentRowChanged.connect(self.on_click_table)
+
         # Attend la class pour définir
 
         self.model = TableModel()
@@ -156,13 +178,36 @@ class MainWindow(QMainWindow):
         self.configurer_colonnes()
 
     # ========================== DEBUT DES METHODES =========================================
+    def on_click_table(self, index):
+        """
+        Récupère les données de la ligne sélectionnée.
+        """
+        model = self.table_can.model()  # Récupérer le modèle de la table
+        ligne = index.row()  # Récupérer l'indice de la ligne cliquée
+
+        # Extraire les valeurs des 3 colonnes
+        col1 = model.data(model.index(ligne, 0), Qt.DisplayRole)
+        col2 = model.data(model.index(ligne, 1), Qt.DisplayRole)
+        col3 = model.data(model.index(ligne, 2), Qt.DisplayRole)
+
+        print(f"Valeur de col1: {col1} (type: {type(col1)})")
+        col1= col1.strip()
+        if not col1.startswith("0x"):
+            col1 = f"0x{col1}"
+
+        idmsg = int(col1, 16)
+        print(f"ID de message converti : {idmsg}")
+        pgn = self._nmea_2000.id(idmsg)
+        print(pgn)
+
+        self.lab_pgn.setText("Issu de l'ID: PGN, Source, Destination, Priorité :\n                     " + str(pgn))
+        print(f"Colonne 1: {col1}, Colonne 2: {col2}, Colonne 3: {col3}")
+
     def on_click_voir(self):
         pass
 
     # Cette méthode écrit avec addTrame défini dans la classe TableModel()
     def affiche_trame(self,trame):
-        # print("trame prêt à être ajouté a la table : " + str(trame))
-        # Exemple de trame: [("FEA56789", "8", "AB 43 54 56 98 DE F3 23")]
         self.model.addTrame(trame)
 
     def configurer_colonnes(self):
@@ -203,6 +248,8 @@ class MainWindow(QMainWindow):
         self.close()
 
     def on_click_open(self) -> int:
+        self.setCursor(Qt.WaitCursor)
+
         # Appelle cette fonction de manière explicite et la fait passer sur "interface".
         self._handle = self._can_interface.open(CAN_BAUD_250K,
                                                 CANUSB_ACCEPTANCE_CODE_ALL,
@@ -216,9 +263,12 @@ class MainWindow(QMainWindow):
             self._close.setEnabled(True)
         else:
             QMessageBox.information(self, "OUVERTURE DE L'ADAPTATEUR!", "Vérifiez que vous êtes bien raccordé")
+        self.unsetCursor()
+
         return self._handle
 
     def on_click_close(self) -> None:
+        self.setCursor(Qt.WaitCursor)
 
         self._stop_flag = True
         if self._handle == 256:
@@ -230,6 +280,7 @@ class MainWindow(QMainWindow):
             self._stop.setEnabled(False)
             self._stop_flag = False
             self._handle = None
+        self.unsetCursor()
         return None
 
     def on_click_stop(self):
@@ -282,6 +333,8 @@ class MainWindow(QMainWindow):
 
     # Méthode pour ouvrir un fichier
     def on_click_file(self) -> os.path:
+        self.setCursor(Qt.WaitCursor)
+
         __previous_file_path = self._file_path
 
         # Boîte de dialogue pour sélectionner un fichier ou en définir un nouveau
@@ -308,6 +361,8 @@ class MainWindow(QMainWindow):
             self._file_path = __previous_file_path
             print("Aucun fichier sélectionné.")
 
+        self.unsetCursor()
+
     # Méthode pour ouvrir la fenêtre des Status.
     def on_click_status(self) :
         try:
@@ -323,6 +378,44 @@ class MainWindow(QMainWindow):
 
         except Exception as e:
             print(f"self._FenetreStatus.remplir_treeview(self._status) : {e}")
+
+    def on_click_import(self):
+        if not self._file_path:
+            QMessageBox.information(self,"IMPORTER LE FICHIER","Veuillez sélectionner un fichier avant d'importer")
+            return None
+        try:
+            QMessageBox.information(self, "IMPORTER", "Vous allez importer les 3000 premières du fichier")
+            #self.TableModel.clear()
+            self.setCursor(Qt.WaitCursor)
+            liste_tuples = []
+            with open(self._file_path, 'r', encoding='utf-8',errors='replace') as fichier:
+                for i, ligne in enumerate(fichier):
+                    # Supprimer les espaces inutiles
+                    ligne = ligne.strip()
+                    valeurs = ligne.split(' ')
+                    # Convertit la liste de valeurs en tuple
+                    ligne_tuple = tuple(valeurs)
+
+                    # Ajoute le tuple à la liste
+                    liste_tuples.append(ligne_tuple)
+                    if i >=2999:
+                        break
+                    liste_modifiee = [
+                        (
+                            t[1],  # 2e élément d'origine
+                            t[2] if len(t) > 2 else '',  # 3e élément d'origine
+                            ' '.join(t[3:]) if len(t) > 3 else ''  # Reste concaténé
+                        )
+                        for t in liste_tuples
+                    ]
+
+                    # print(f"Étape actuelle : {tuples_formats}")
+                    # print("On a calculé la liste prête à être affiché sur le tableau")
+                    self.affiche_trame(liste_modifiee)
+                self.unsetCursor()
+        except FileNotFoundError:
+            print(f"Fichier non trouvé : {self._file_path}")
+            self.unsetCursor()
 # ========================== FIN DES METHODES =========================================
 
 

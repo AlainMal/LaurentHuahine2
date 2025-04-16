@@ -1,7 +1,7 @@
 import ctypes
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from ctypes import Structure, c_ubyte,c_long, c_int, POINTER
+from ctypes import Structure, c_ubyte,c_long, c_int, POINTER, c_uint8
 from Package.constante import *
 
 
@@ -11,7 +11,7 @@ class CanMsg(Structure):
         ("TimeStamp", c_long),
         ("flags", c_ubyte),
         ("len", c_ubyte),
-        ("data", c_ubyte *8)
+        ("data", c_ubyte*8)
     )
 
 # Défini les fonctions de la dll.
@@ -46,7 +46,6 @@ class WindowsUSBCANInterface:
         self._dll.canusb_Read.restype = c_int
         # Fonction STATUS
         self._dll.canusb_Status.restype = c_int
-        self._dll.canusb_Read.restype = c_int
 
         self._handle = None
 
@@ -71,14 +70,14 @@ class WindowsUSBCANInterface:
         # Boucle pour attendre les trames CAN.
         while not stop_flag:
             if self._handle is None:
-                self._handle = 0    # Marquer le handle comme inactif en entier
+                self._handle = 0    # Marquer le handle en entier comme inactif
             result = await asyncio.get_event_loop().run_in_executor(
                 self.executor,
-                self._dll.canusb_Read,
-                self._handle,
+                self._dll.canusb_Read,      # Appel la fonction en dll
+                self._handle,         # Récupère le _handle
                     ctypes.byref(self.msg)  # Paramètres passés par référence à la fonction native
             )
-            # Résultat du CAN : on sort si une trame a été reçue : result=1.
+            # Résultat du CAN : on sort si une trame a été reçue : result == 1.
             # Sinon il a des valeurs négatives qui représente différent défaut,
             # dont le -7 qui indtque qu'il n'a pas reçu de tramrs.
             if result <= -2 and result != -7:
