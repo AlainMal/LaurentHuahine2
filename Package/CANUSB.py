@@ -75,8 +75,8 @@ class WindowsUSBCANInterface:
                 self.executor,
                 self._dll.canusb_Read,      # Appel la fonction en dll
                 self._handle,         # Récupère le _handle
-                    ctypes.byref(self.msg)  # Paramètres passés par référence à la fonction native
-            )
+                    ctypes.byref(self.msg)) # Paramètres passés par référence à la fonction native
+
             # Résultat du CAN : on sort si une trame a été reçue : result == 1.
             # Sinon il a des valeurs négatives qui représente différent défaut,
             # dont le -7 qui indtque qu'il n'a pas reçu de tramrs.

@@ -1,6 +1,6 @@
 
 # Cette classe sert uniquement à traiter les résultats, il n'y a pas de self.
-# C'est pévu de la faire traiter le NMEA 2000.
+# C'est prévu de lui faire traiter le NMEA 2000.
 class TraitementCAN:
     def __init__(self):
           pass
@@ -15,8 +15,6 @@ class TraitementCAN:
             # On commence par un espace, car ça fini par le dernier octet.
             datas += " " + format(msg.data[i], "02X")
 
-
-        # print("On a calculé les octets")
         # on met le résultat dans la table.
         """   Ca ne fonctionne pas car il est trop lent et ça loupe des trames.
         if msg:

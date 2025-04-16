@@ -13,6 +13,7 @@ from Package.constante import *
 from Package.TraitementCAN import TraitementCAN
 from Package.NMEA_2000 import NMEA2000
 
+# ********************************** CLASSE MODELE DE LA TABLE *********************************************************
 # Cette classe sert de modèle à la table incluse dans MainWindow()
 class TableModel(QAbstractTableModel):
     def __init__(self):
@@ -67,6 +68,8 @@ class TableModel(QAbstractTableModel):
 
             # Terminer l'insertion
             self.endInsertRows()
+# ************************************ FIN DE LA CLASSE  TableModel ****************************************************
+
 
 # ************************************ FENETRE DU STATUS ***************************************************************
 class FenetreStatus(QMainWindow):
@@ -115,6 +118,7 @@ class FenetreStatus(QMainWindow):
 
             print("TREEWIDGET REMPLI")
 # *************************************** FIN DE LA FENETRE STATUS *****************************************************
+
 
 # ***************************************** FENETRE PRINCIAPALE ********************************************************
 class MainWindow(QMainWindow):
@@ -352,8 +356,7 @@ class MainWindow(QMainWindow):
             "Ouvrir ou Créer un Fichier",  # Titre de la boîte de dialogue
             self._file_path if self._file_path else ""
             ,  # Dossier initial
-            "Fichier texte (*.txt);;Tous les fichiers (*.*)"  # Types de fichiers filtres
-        )
+            "Fichier texte (*.txt);;Tous les fichiers (*.*)")
 
         if selected_file_path:
             self._file_path = selected_file_path
@@ -394,7 +397,6 @@ class MainWindow(QMainWindow):
             return None
         try:
             QMessageBox.information(self, "IMPORTER", "Vous allez importer les 3000 premières du fichier")
-            #self.TableModel.clear()
             self.setCursor(Qt.WaitCursor)
             liste_tuples = []
             with open(self._file_path, 'r', encoding='utf-8',errors='replace') as fichier:
@@ -415,11 +417,8 @@ class MainWindow(QMainWindow):
                             t[2] if len(t) > 2 else '',  # 3e élément d'origine
                             ' '.join(t[3:]) if len(t) > 3 else ''  # Reste concaténé
                         )
-                        for t in liste_tuples
-                    ]
+                        for t in liste_tuples]
 
-                    # print(f"Étape actuelle : {tuples_formats}")
-                    # print("On a calculé la liste prête à être affiché sur le tableau")
                     self.affiche_trame(liste_modifiee)
                 self.unsetCursor()
         except FileNotFoundError:
