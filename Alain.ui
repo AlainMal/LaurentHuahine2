@@ -265,13 +265,26 @@ font: 8pt &quot;Segoe UI&quot;;</string>
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>280</y>
+      <y>260</y>
       <width>281</width>
       <height>61</height>
      </rect>
     </property>
     <property name="text">
      <string>Issu de l'ID: PGN, Source, Destination, Priorité :</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lab_octet">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>310</y>
+      <width>281</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Signification</string>
     </property>
    </widget>
   </widget>

@@ -34,21 +34,16 @@ class NMEA2000:
     # ========================== Méthodes de récupération des valeurs dans l'ID ========================================
     # On récupère le PGN, puis la source puis la detination puis la priorité.
     def pgn(self, id):
-        print(f"Début du traitement de 'pgn' avec id : {id}")
-
         try:
             pf = (id & 0x00FF0000) >> 16  # Extraire les bits PF (byte 2)
             ps = (id & 0x0000FF00) >> 8  # Extraire les bits PS (byte 1)
             dp = (id & 0x03000000) >> 24  # Extraire les bits DP (bits 24-25)
 
-            print(f"PF : {pf}, PS : {ps}, DP : {dp}")
-
             if pf < 240:  # Si PF < 240, c'est un message point à point
                 self._pgn = (dp << 16) | (pf << 8)  # Construire le PGN
-                print(f"Mode Point-to-Point, PGN calculé : {self._pgn}")
+
             else:  # Sinon, c'est un message global (broadcast)
                 self._pgn = (dp << 16) | (pf << 8) | ps
-                print(f"Mode Broadcast, PGN calculé : {self._pgn}")
 
             return self._pgn
         except Exception as e:
@@ -81,10 +76,10 @@ class NMEA2000:
         print("Est bien entré dans octets.")
         match pgn:
             case 130306:
-                self._valeurChoisie1 = (datas[2] << 8 | datas[1]) * 0.01 * 1.94384449
+                self._valeurChoisie1 = "{:.2f}".format((datas[2] << 8 | datas[1]) * 0.01 * 1.94384449)
                 self._pgn1 = "Noeuds du Vent"
 
-                self._valeurChoisie2 = (datas[4] << 8 | datas[3]) * 0.0001 * 180 / math.pi
+                self._valeurChoisie2 = "{:.2f}".format((datas[4] << 8 | datas[3]) * 0.0001 * 180 / math.pi)
                 self._pgn2 = "Direction du vent"
 
                 self._valeurChoisieTab = datas[5] & 0x07
@@ -232,17 +227,4 @@ class NMEA2000:
         # Retoune le tuple qui ne comprend pas les analyses pour l'instant.
         return (self._pgn1, self._pgn2, self._pgn3, self._valeurChoisie1,
                 self._valeurChoisie2, self._valeurChoisie3, self._valeurChoisieTab)
-
-    # Méthode qui retourne le tuple des octets.
-    def tuple_octets(self,msg):
-        # Appel la méthode qui récupère le PGN
-        pgn = self.pgn(msg)
-
-        # Retourne le tuple des octets définis à travers de la méthode octets(pgn).
-        return self.octets(pgn,msg)
-
-
-
-
-
 

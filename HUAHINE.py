@@ -201,15 +201,17 @@ class MainWindow(QMainWindow):
         print(pgn)
 
         self.lab_pgn.setText("Issu de l'ID: PGN, Source, Destination, Priorité :\n                     " + str(pgn))
-        # print(f"Colonne 1: {col1}, Colonne 2: {col2}, Colonne 3: {col3}")
 
         # Diffuse le résultat des octets avec leurs définitions.
         if col3:
             data = col3.split(" ")
-            # for i in range(len(data)):
-            #    print(f"Octet {i}: {data[i]}")
+            print("PGN = " + str(int(pgn[0])))
+            print("DATAS = " + str([int(octet,16) for octet in data]))
             try:
-                octetstuple = self._nmea_2000.octets(int(pgn),[int(octet,16) for octet in data])
+                octetstuple = self._nmea_2000.octets(int(pgn[0]),[int(octet,16) for octet in data])
+                print(f"Résultat octets : {octetstuple}")
+                self.lab_octet.setText(str(octetstuple))
+
                 print(octetstuple)
             except Exception as e:
                 print(f"Erreur dans l'appel à octets : {e}")
