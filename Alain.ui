@@ -278,13 +278,16 @@ font: 8pt &quot;Segoe UI&quot;;</string>
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>310</y>
+      <y>320</y>
       <width>281</width>
       <height>61</height>
      </rect>
     </property>
     <property name="text">
      <string>Signification</string>
+    </property>
+    <property name="wordWrap">
+     <bool>true</bool>
     </property>
    </widget>
   </widget>
