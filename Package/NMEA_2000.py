@@ -33,13 +33,13 @@ class NMEA2000:
 
     # ========================== Méthodes de récupération des valeurs dans l'ID ========================================
     # On récupère le PGN, puis la source puis la detination puis la priorité.
-    def pgn(self, idmsg):
-        print(f"Début du traitement de 'pgn' avec idmsg : {idmsg}")
+    def pgn(self, id):
+        print(f"Début du traitement de 'pgn' avec id : {id}")
 
         try:
-            pf = (idmsg & 0x00FF0000) >> 16  # Extraire les bits PF (byte 2)
-            ps = (idmsg & 0x0000FF00) >> 8  # Extraire les bits PS (byte 1)
-            dp = (idmsg & 0x03000000) >> 24  # Extraire les bits DP (bits 24-25)
+            pf = (id & 0x00FF0000) >> 16  # Extraire les bits PF (byte 2)
+            ps = (id & 0x0000FF00) >> 8  # Extraire les bits PS (byte 1)
+            dp = (id & 0x03000000) >> 24  # Extraire les bits DP (bits 24-25)
 
             print(f"PF : {pf}, PS : {ps}, DP : {dp}")
 
@@ -55,29 +55,30 @@ class NMEA2000:
             print(f"Erreur dans la méthode 'pgn' : {e}")
             raise
 
-    def source(self,idmsg):
-        self._source = idmsg & 0xFF
+    def source(self,id):
+        self._source = id & 0xFF
         return self._source
 
-    def destination(self,idmsg):
-        if ((idmsg & 0xFF0000) >> 16) < 240:
-            self._destination = (idmsg &  0x00FF00) >> 8
+    def destination(self,id):
+        if ((id & 0xFF0000) >> 16) < 240:
+            self._destination = (id &  0x00FF00) >> 8
         else:
-            self._destination = (idmsg & 0xFF0000) >> 16
+            self._destination = (id & 0xFF0000) >> 16
 
         return self._destination
 
-    def priorite(self,idmsg):
-        self._priorite = (idmsg & 0x1C000000) >> 26
+    def priorite(self,id):
+        self._priorite = (id & 0x1C000000) >> 26
         return self._priorite
 
-    # Renvoi un tuple contenant toutes les variables contenus dans l'idmsg
-    def id(self,idmsg):
-        return self.pgn(idmsg), self.source(idmsg) ,self.destination(idmsg),self.priorite(idmsg)
+    # Renvoi un tuple contenant toutes les variables contenus dans l'id
+    def id(self,id):
+        return self.pgn(id), self.source(id) ,self.destination(id),self.priorite(id)
     # ================================== FIN DES METHODES POUR L'ID ====================================================
 
     # ========================== Méthodes de récupération des valeurs des octets =======================================
     def octets(self,pgn,datas):
+        print("Est bien entré dans octets.")
         match pgn:
             case 130306:
                 self._valeurChoisie1 = (datas[2] << 8 | datas[1]) * 0.01 * 1.94384449

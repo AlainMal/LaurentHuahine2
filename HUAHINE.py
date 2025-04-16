@@ -195,13 +195,24 @@ class MainWindow(QMainWindow):
         if not col1.startswith("0x"):
             col1 = f"0x{col1}"
 
-        idmsg = int(col1, 16)
-        print(f"ID de message converti : {idmsg}")
-        pgn = self._nmea_2000.id(idmsg)
+        id = int(col1, 16)
+        print(f"ID de message converti : {id}")
+        pgn = self._nmea_2000.id(id)
         print(pgn)
 
         self.lab_pgn.setText("Issu de l'ID: PGN, Source, Destination, Priorité :\n                     " + str(pgn))
-        print(f"Colonne 1: {col1}, Colonne 2: {col2}, Colonne 3: {col3}")
+        # print(f"Colonne 1: {col1}, Colonne 2: {col2}, Colonne 3: {col3}")
+
+        # Diffuse le résultat des octets avec leurs définitions.
+        if col3:
+            data = col3.split(" ")
+            # for i in range(len(data)):
+            #    print(f"Octet {i}: {data[i]}")
+            try:
+                octetstuple = self._nmea_2000.octets(int(pgn),[int(octet,16) for octet in data])
+                print(octetstuple)
+            except Exception as e:
+                print(f"Erreur dans l'appel à octets : {e}")
 
     def on_click_voir(self):
         pass
