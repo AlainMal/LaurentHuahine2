@@ -276,6 +276,231 @@ class NMEA2000:
                     self._valeurChoisie2 = "{:.2f}".format((datas[3] << 8 | datas[2]) * 0.0001 * 180 / math.pi)
                     self._pgn2 = "AIS_A Heading"
 
+            case 129794:
+                self._valeurChoisie1 = (datas[0] & 0x1F)
+                self._pgn1 = "AIS Données classe A"
+
+                if self._valeurChoisie1 == 0:
+                    self._valeurChoisie2 = datas[6] << 24 | datas[5] << 16 | datas[4] << 8 | datas[3]
+                    self._pgn2 = "MMSI"
+
+                elif self._valeurChoisie1 == 1:
+                    self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(4, 8)])
+                    self._pgn2 = "Indicatif"
+
+                elif self._valeurChoisie1 == 2:
+                    self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(1, 4)])
+                    self._pgn2 = "Indicatif"
+
+                    self._valeurChoisie3 = "".join([chr(datas[i]) for i in range(4, 8)])
+                    self._pgn3 = "Nom du navire"
+
+                elif self._valeurChoisie1 == 3 or self._valeurChoisie1 == 4:
+                    self._valeurChoisie3 = "".join([chr(datas[i]) for i in range(1, 8)])
+                    self._pgn3 = "Nom du navire"
+
+                elif self._valeurChoisie1 == 5:
+                    self._valeurChoisie2 = "{:.2f}".format((datas[5] << 8 | datas[4]) * 0.1)
+                    self._pgn2 = "Longueur"
+
+                    self._valeurChoisie3 = "{:.2f}".format((datas[7] << 8 | datas[6]) * 0.1)
+                    self._pgn3 = "Largeur"
+
+                elif self._valeurChoisie1 == 6:
+                    self._valeurChoisie2 = "{:.2f}".format((datas[3] << 8 | datas[2]) * 0.0001 / 1.85)
+                    self._pgn2 = "Longueur"
+
+                    self._valeurChoisie3 = "{:.2f}".format((datas[5] << 8 | datas[4]) * 0.0001 / 1.85)
+                    self._pgn3 = "Largeur"
+
+                elif self._valeurChoisie1 == 7:
+                    self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(6, 8)])
+                    self._pgn2 = "Destinaion"
+
+                elif self._valeurChoisie1 == 8 or self._valeurChoisie1 == 9:
+                    self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(1, 8)])
+                    self._pgn2 = "Destinaion"
+
+            case 129809:
+                self._valeurChoisie1 = (datas[0] & 0x1F)
+                self._pgn1 = "AIS Données classe B"
+
+                if self._valeurChoisie1 == 0:
+                    self._valeurChoisie2 = datas[6] << 24 | datas[5] << 16 | datas[4] << 8 | datas[3]
+                    self._pgn2 = "MMSI"
+
+                    self._valeurChoisie2 = chr(datas[7])
+                    self._pgn2 = "Nom du navire"
+
+                elif self._valeurChoisie1 == 1:
+                    self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(1, 8)])
+                    self._pgn2 = "Nom du navire"
+
+                elif self._valeurChoisie1 == 2:
+                    self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(1, 6)])
+                    self._pgn2 = "Nom du navire"
+
+            case 129039:
+                self._valeurChoisie1 = (datas[0] & 0x1F)
+                self._pgn1 = "AIS Position classe B"
+
+                if self._valeurChoisie1 == 0:
+                    self._valeurChoisie2 = datas[6] << 24 | datas[5] << 16 | datas[4] << 8 | datas[3]
+                    self._pgn2 = "MMSI"
+
+                    self.set_memoire(MEMOIRE_PGN_a7, PGN_129039, self._valeurChoisie1 + 1, datas[7])
+
+                elif self._valeurChoisie1 == 1:
+                    self._valeurChoisie2 = (datas[3] << 24 | datas[2] << 16 | datas[1] << 8
+                                            | self.get_memoire(MEMOIRE_PGN_a7,PGN_129039,self._valeurChoisie1)) * (10**-7)
+                    self._pgn2 = "AIS_B Longitude"
+
+                    self._valeurChoisie3 = (datas[7] << 24 | datas[6] << 16 | datas[5] << 8 | datas[4] ) * (10**-7)
+                    self._pgn3 = "AIS_B Latitude"
+
+                elif self._valeurChoisie1 == 2:
+                    self._valeurChoisie2 = "{:.2f}".format((datas[3] << 8 | datas[2]) * 0.0001 * 180 / math.pi)
+                    self._pgn2 = "AIS_B COG"
+
+                    self._valeurChoisie3 = "{:.2f}".format((datas[5] << 8 | datas[4]) * 0.01 * 1.94384449)
+                    self._pgn3 = "AIS_B SOG"
+
+                elif self._valeurChoisie1 == 3:
+                    self._valeurChoisie2 = "{:.2f}".format((datas[3] << 8 | datas[2]) * 0.0001 * 180 / math.pi)
+                    self._pgn2 = "AIS_B Heading"
+
+            case 129810:
+                self._valeurChoisie1 = (datas[0] & 0x1F)
+                self._pgn1 = "AIS Données classe A Part B"
+
+                if self._valeurChoisie1 == 0:
+                    self._valeurChoisie2 = datas[6] << 24 | datas[5] << 16 | datas[4] << 8 | datas[3]
+                    self._pgn2 = "MMSI"
+
+                elif self._valeurChoisie1 == 2 or self._valeurChoisie1 == 3:
+                    self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(1, 8)])
+                    self._pgn2 = "Indicatif"
+
+            case 129029:
+                self._valeurChoisie1 = (datas[0] & 0x1F)
+                self._pgn1 = "Info. de positioon GNSS"
+
+                if self._valeurChoisie1 == 4:
+                    self._valeurChoisie2 = datas[7]
+                    self._pgn2 = "Nombre de satélites"
+
+            case 129539:
+                self._valeurChoisie1 = (datas[0] & 0x1F)
+                self._pgn1 = "Précision GNSS"
+
+            case 130577:
+                self._valeurChoisie1 = (datas[0] & 0x0F)
+                self._pgn1 = "Données de direction"
+
+                if self._valeurChoisie1 == 1:
+                    self._valeurChoisie2 = "{:.2f}".format((datas[2] << 8 | datas[1]) * 0.0001 * 180 / math.pi)
+                    self._pgn2 = "COG"
+
+                    self._valeurChoisie3 = "{:.2f}".format((datas[4] << 8 | datas[3]) * 0.01 * 1.94384449)
+                    self._pgn3 = "SOG"
+
+            case 127506:
+                self._valeurChoisie1 = (datas[0] & 0x1F)
+                self._pgn1 = "Batteries détaillées"
+
+                if self._valeurChoisie1 == 0:
+                    self._valeurChoisie2 = datas[5]
+                    self._pgn2 = "Etat de charge"
+
+                    self._valeurChoisie2 = datas[6]
+                    self._pgn2 = "Etat de santé"
+
+                    self.set_memoire(MEMOIRE_PGN_a7,PGN_127506,self._valeurChoisie1 + 1,datas[7])
+
+                elif self._valeurChoisie1 == 1:
+                    if not self.get_memoire(MEMOIRE_PGN_a7,PGN_127506,self._valeurChoisie1) == 0xFF:
+                        self._valeurChoisie2 = (datas[1] << 8 | self.get_memoire(MEMOIRE_PGN_a7,PGN_127506,self._valeurChoisie1))
+                        self._pgn1 = "Temps restant"
+
+            case 126720:
+                self._valeurChoisie1 = (datas[0] & 0x1F)
+                self._pgn1 = "Info propriétaire"
+
+                if self._valeurChoisie1 == 0:
+                    self._valeurChoisie1 = datas[2]
+                    self._pgn2 = "Code propriétaire"
+
+            case 127245:
+                if datas[0] != 0xFF:
+                    self._valeurChoisie1 =  "{:.2f}".format((datas[5] << 8 | datas[4]) * 0.0001 * 180 / math.pi)
+
+                self._pgn1 = "Ordre de barre"
+
+            case 127251:
+                self._valeurChoisie1 =  "{:.2f}".format((datas[3] << 8 | datas[2])  * 0.00000003125 * 180 / math.pi)
+                self._pgn1 = "Vitesse de rotation"
+
+            case 126464:
+                self._valeurChoisie1 = (datas[0] & 0x1F)
+                self._pgn1 = "Liste de PGN"
+
+                if (self._valeurChoisie1 + 3) % 3 == 0:
+                    self._pgn1 = "PGN"
+                    temp = (datas[5] << 16 | datas[4] << 8 | datas[3])
+                    if not (temp < 59392 or temp > 130944):
+                        self._valeurChoisie2 = temp
+                        self.set_memoire(MEMOIRE_PGN_a6, PGN_127506, self._valeurChoisie1 + 1, datas[6])
+                        self.set_memoire(MEMOIRE_PGN_a7, PGN_127506, self._valeurChoisie1 + 1, datas[7])
+
+                        self._pgn2 = "Num PGN"
+
+                elif (self._valeurChoisie1 + 2) % 3 == 0:
+                    temp =  (datas[2] << 16 | self.get_memoire(MEMOIRE_PGN_a7,PGN_127506,self._valeurChoisie1) << 8
+                                            | self.get_memoire(MEMOIRE_PGN_a6,PGN_127506,self._valeurChoisie1))
+                    if not (temp < 59392 or temp > 130944):
+                        self._valeurChoisie2 = temp
+                        self._valeurChoisie3 = (datas[4] << 16 | datas[3] << 8 | datas[2])
+                        self._valeurChoisieTab = "Num PGN" + str(datas[7] << 16 | datas[6] << 8 | datas[5])
+                        self._pgn2 = "Num PGN"
+                        self._pgn3 = "Num PGN"
+
+
+                    if (self._valeurChoisie1 + 1) % 3 == 0:
+                        self._pgn2 = "PGN"
+                        temp = (datas[3] << 16 | datas[2] << 8 | datas[1])
+                        if not (temp < 59392 or temp > 130944):
+                            self._valeurChoisie2 = temp
+                            self._pgn2 = "Num PGN"
+                            self._valeurChoisie3 = (datas[6] << 16 | datas[5] << 8 | datas[4])
+                            self._pgn3 = "Num PGN"
+
+            case 127505:
+                self._valeurChoisie1 = (datas[2] << 8 | datas[1])  * 0.004
+                self._pgn1 = "Niveau Réservoir"
+
+                self._valeurChoisie2 = (datas[6] << 24 | datas[5] << 16 | datas[4] << 8 | datas[3]) * 0.1
+                self._pgn2 = "Capacité du reservoir"
+
+
+            case 128275:
+                self._valeurChoisie1 = (datas[0] & 0x1F)
+                self._pgn1 = "Journal"
+
+                if self._valeurChoisie1 == 1:
+                    self._valeurChoisie2 = (datas[6] << 24 | datas[5] << 16 | datas[4] << 8 | datas[3])
+                    self._pgn2 = "Distance parcourrue"
+
+            case 129540:
+                self._valeurChoisie1 = (datas[0] & 0x1F)
+                self._pgn1 = "Satélites en vues"
+
+                if self._valeurChoisie1 == 0:
+                    self._valeurChoisie2 = datas[5]
+                    self._pgn2 = "Nombre de satélites"
+
+
+
+
 
             case _:
                 self._pgn1 = "<PGN inconnu sur cette version>"
