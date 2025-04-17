@@ -504,7 +504,13 @@ class NMEA2000:
                     self._valeurChoisie2 = datas[5]
                     self._pgn2 = "Nombre de satélites"
 
+            case 129284:
+                self._valeurChoisie1 = (datas[0] & 0x1F)
+                self._pgn1 = "Données Navigation"
 
+                if self._valeurChoisie1 == 4:
+                    self._pgn2 ="Latitude Waypoint"
+                    self._pgn3 = "Longitude Waypoint"
 
 
 
