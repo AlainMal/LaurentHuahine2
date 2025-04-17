@@ -267,7 +267,7 @@ class MainWindow(QMainWindow):
         # Fermer la fenêtre courante
         print("Fermeture de la fenêtre principale")
         self._stop_flag = True
-        self.close()
+        self.on_click_close()
 
     def on_click_open(self) -> int:
         self.setCursor(Qt.WaitCursor)
@@ -329,7 +329,7 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 # Gestion des erreurs pendant la lecture
                 print(f"Erreur pendant la lecture CAN : {e}")
-
+        print("Tache terminée")
     # Méthode qui gére le read()
     async def main(self) -> None:
         # Attent le résulat du read, qui ne revoit rien,
