@@ -427,7 +427,7 @@ class NMEA2000:
                 self._pgn1 = "Info propriétaire"
 
                 if self._valeurChoisie1 == 0:
-                    self._valeurChoisie1 = datas[2]
+                    self._valeurChoisie2 = datas[2]
                     self._pgn2 = "Code propriétaire"
 
             case 127245:
@@ -466,7 +466,7 @@ class NMEA2000:
 
                     temp = (datas[7] << 16 | datas[6] << 8 | datas[5])
                     if not (temp < 59392 or temp > 130944):
-                        self._valeurChoisieTab = "Num PGN" + str(temp)
+                        self._valeurChoisieTab = "Num PGN: " + str(temp)
                         self._pgn3 = "Num PGN"
 
                 elif (self._valeurChoisie1 + 1) % 3 == 0:
@@ -512,7 +512,41 @@ class NMEA2000:
                     self._pgn2 ="Latitude Waypoint"
                     self._pgn3 = "Longitude Waypoint"
 
+            case 126996:
+                self._valeurChoisie1 = (datas[0] & 0x1F)
+                self._pgn1 = "Information prodruit"
 
+                self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(6, 8)])
+                self._pgn1 = "Configuration"
+
+                if (self._valeurChoisie1 == 1 or self._valeurChoisie1 == 2
+                                            or self._valeurChoisie1 == 3 or
+                                            self._valeurChoisie1 == 4):
+                    self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(1, 8)])
+                    self._pgn2 ="Configuration"
+
+                elif self._valeurChoisie1 == 5:
+                    self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(3, 8)])
+                    self._pgn2 = "Version"
+
+            case 126998:
+                self._valeurChoisie1 = (datas[0] & 0x1F)
+                self._pgn1 = "Info Configuration"
+                if self._valeurChoisie1 == 0:
+                    self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(1, 7)])
+                    self._pgn2 = "Configuration"
+
+            case 127258:
+                self._valeurChoisie1 = "{:.2f}".format((datas[5] << 8 | datas[4]) * 0.0001 * 180 / math.pi)
+                self._pgn1 = "Variation magnétique"
+
+            case 130314:
+                self._valeurChoisie1 = "{:.2f}".format((datas[6] << 24 | datas[5] << 16 | datas[4] << 8 | datas[3]) * 0.001)
+                self._pgn1 = "Prssion atmosphérique"
+
+            case 129283:
+                self._valeurChoisie1 = "{:.2f}".format((datas[5] << 24 | datas[4] << 16 | datas[3] << 8 | datas[2]) * 0.01)
+                self._pgn1 = "XTE"
 
             case _:
                 self._pgn1 = "<PGN inconnu sur cette version>"

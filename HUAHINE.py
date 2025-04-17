@@ -170,8 +170,8 @@ class MainWindow(QMainWindow):
         self.table_can.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table_can.setSelectionBehavior(QAbstractItemView.SelectRows)
 
-        self.model = TableModel()
-        self.table_can.setModel(self.model)
+        self._model = TableModel()
+        self.table_can.setModel(self._model)
         # Connecter le signal selectionChanged
         self.table_can.selectionModel().selectionChanged.connect(self.on_selection_changed)
         # Configurer les largeurs des colonnes
@@ -233,7 +233,7 @@ class MainWindow(QMainWindow):
 
     # Cette méthode écrit avec addTrame défini dans la classe TableModel()
     def affiche_trame(self,trame):
-        self.model.addTrame(trame)
+        self._model.addTrame(trame)
 
     def configurer_colonnes(self):
         self.table_can.setColumnWidth(0, 80)  # Largeur de "ID"
@@ -412,7 +412,8 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, "IMPORTER", "Vous allez importer les 3000 premières du fichier")
             # self.setCursor(Qt.WaitCursor)
             QApplication.setOverrideCursor(Qt.WaitCursor)
-            self.model.data_table = []
+            self._model.clear()
+            self._model.data_table = []
 
             liste_tuples = []
             with open(self._file_path, 'r', encoding='utf-8',errors='replace') as fichier:
@@ -443,8 +444,6 @@ class MainWindow(QMainWindow):
 
         finally:
             QApplication.restoreOverrideCursor()
-
-
 # ========================== FIN DES METHODES =========================================
 
 
