@@ -1,5 +1,5 @@
 import math
-
+from Package.constante import *
 # **********************************************************************************************************************
 #       Programme d'analyse des trames du bus CAN et les transforment en NMEA 2000
 # **********************************************************************************************************************
@@ -249,32 +249,32 @@ class NMEA2000:
                 self._analyse4 = "Coor " + self._pgn2
 
             case 129038:
-                self._valeurChoisie1 = datas[0] & 0x1F
+                self._valeurChoisie1 = (datas[0] & 0x1F)
                 self._pgn1 = "AIS Posittion Class A"
 
                 if self._valeurChoisie1 == 0:
                     self._valeurChoisie2 = datas[6] << 24 | datas[5] << 16 | datas[4] << 8 | datas[3]
                     self._pgn2 = "MMSI"
-                    self.set_memoire(7,129038,self._valeurChoisie1 + 1,datas[7])
+                    self.set_memoire(MEMOIRE_PGN_a7,PGN_129038,self._valeurChoisie1 + 1,datas[7])
 
                 elif self._valeurChoisie1 == 1:
                     self._valeurChoisie2 = (datas[3] << 24 | datas[2] << 16 | datas[1] << 8
-                                            | self.get_memoire(7,129038,self._valeurChoisie1)) * (10**-7)
-                    self._pgn2 = "Longitude"
+                                            | self.get_memoire(MEMOIRE_PGN_a7,PGN_129038,self._valeurChoisie1)) * (10**-7)
+                    self._pgn2 = "AIS_A Longitude"
 
-                    self._valeurChoisie2 = (datas[7] << 24 | datas[6] << 16 | datas[5] << 8 | datas[4] ) * (10**-7)
-                    self._pgn2 = "Latitude"
+                    self._valeurChoisie3 = (datas[7] << 24 | datas[6] << 16 | datas[5] << 8 | datas[4] ) * (10**-7)
+                    self._pgn3 = "AIS_A Latitude"
 
                 elif self._valeurChoisie1 == 2:
                     self._valeurChoisie2 = "{:.2f}".format((datas[3] << 8 | datas[2]) * 0.0001 * 180 / math.pi)
-                    self._pgn2 = "COG"
+                    self._pgn2 = "AIS_A COG"
 
                     self._valeurChoisie3 = "{:.2f}".format((datas[5] << 8 | datas[4]) * 0.01 * 1.94384449)
-                    self._pgn3 = "SOG"
+                    self._pgn3 = "AIS_A SOG"
 
                 elif self._valeurChoisie1 == 3:
                     self._valeurChoisie2 = "{:.2f}".format((datas[3] << 8 | datas[2]) * 0.0001 * 180 / math.pi)
-                    self._pgn2 = "Heading"
+                    self._pgn2 = "AIS_A Heading"
 
 
             case _:
