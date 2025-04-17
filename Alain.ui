@@ -175,8 +175,8 @@ font: 12pt &quot;Segoe UI&quot;;</string>
    <widget class="QPushButton" name="cmd_voir">
     <property name="geometry">
      <rect>
-      <x>100</x>
-      <y>390</y>
+      <x>90</x>
+      <y>410</y>
       <width>75</width>
       <height>24</height>
      </rect>
@@ -267,7 +267,7 @@ font: 8pt &quot;Segoe UI&quot;;</string>
       <x>10</x>
       <y>260</y>
       <width>281</width>
-      <height>61</height>
+      <height>41</height>
      </rect>
     </property>
     <property name="text">
@@ -278,9 +278,9 @@ font: 8pt &quot;Segoe UI&quot;;</string>
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>320</y>
+      <y>300</y>
       <width>281</width>
-      <height>61</height>
+      <height>91</height>
      </rect>
     </property>
     <property name="text">

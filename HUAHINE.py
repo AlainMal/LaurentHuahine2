@@ -205,21 +205,24 @@ class MainWindow(QMainWindow):
 
         id_msg = int(col1, 16)
         print(f"ID de message converti : {id_msg}")
-        pgn = self._nmea_2000.id(id_msg)
-        print(pgn)
+        tout_id = self._nmea_2000.id(id_msg)
+        print(tout_id)
 
         self.lab_pgn.setText("Issu de l'ID: PGN, Source, Destination, Priorité :\n                     "
-                             + str(pgn))
+                             + str(tout_id))
 
         # Diffuse le résultat des octets avec leurs définitions.
         if col3:
             data = col3.split(" ")
-            print("PGN = " + str(int(pgn[0])))
+            print("PGN = " + str(int(tout_id[0])))
             print("DATAS = " + str([int(octet,16) for octet in data]))
             try:
-                octetstuple = self._nmea_2000.octets(int(pgn[0]),[int(octet,16) for octet in data])
+                octetstuple = self._nmea_2000.octets(int(tout_id[0]),[int(octet,16) for octet in data])
                 print(f"Résultat octets : {octetstuple}")
-                self.lab_octet.setText(str(octetstuple))
+                self.lab_octet.setText("PGN:" + str(tout_id[0]) + "\n" + str(octetstuple[0]) + ": " + str(octetstuple[3]) + "\n"
+                                       + str(octetstuple[1]) + ": " + str(octetstuple[4]) + "\n"
+                                       + str(octetstuple[2]) + ": " + str(octetstuple[5]) + "\n"
+                                       + "Table : " + str(octetstuple[6]))
 
                 print(octetstuple)
             except Exception as e:
@@ -242,7 +245,7 @@ class MainWindow(QMainWindow):
         self._read.setEnabled(False)
         self._stop.setEnabled(False)
 
-        # Initialise les boutons du menu.
+        # Initialise les boutons du menu, Quitter
         self.actionQuitter.triggered.connect(self.close_both)
 
         # Ouvre la fenêtre
@@ -268,6 +271,7 @@ class MainWindow(QMainWindow):
         print("Fermeture de la fenêtre principale")
         self._stop_flag = True
         self.on_click_close()
+        self.close()
 
     def on_click_open(self) -> int:
         self.setCursor(Qt.WaitCursor)
