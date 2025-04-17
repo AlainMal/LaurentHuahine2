@@ -30,6 +30,17 @@ class NMEA2000:
         self._source = None
         self._pgn = None
 
+        # Défini la mémoire
+        nombre_octets = 8
+        nombre_pgn = 255
+        nombre_trames = 255
+        valeur_defaut = 0
+
+        # Crée une table 3D fixe remplie avec la valeur par défaut
+        self.memoire = [[[valeur_defaut for _ in range(nombre_trames)]
+                         for _ in range(nombre_pgn)]
+                        for _ in range(nombre_octets)]
+
     # ========================== Méthodes de récupération des valeurs dans l'ID ========================================
     # On récupère le PGN, puis la source ensuite la detination ensuite la priorité.
     def pgn(self, id_msg):
@@ -69,6 +80,16 @@ class NMEA2000:
     def id(self,id_msg):
         return self.pgn(id_msg), self.source(id_msg) ,self.destination(id_msg),self.priorite(id_msg)
     # ================================== FIN DES METHODES POUR L'ID ====================================================
+
+    # ================================= Méthodes de gestion de la mémoire ==============================================
+    def set_memoire(self, numero_d_octet, numero_pgn, numero_de_trame, valeur):
+        self.memoire[numero_d_octet][numero_pgn][numero_de_trame] = valeur
+
+    def get_memoire(self, numero_d_octet, numero_pgn, numero_de_trame):
+        return self.memoire[numero_d_octet][numero_pgn][numero_de_trame]
+
+    # ======================================== Fin des mémoires ========================================================
+
 
     # ========================== Méthodes de récupération des valeurs des octets =======================================
     def octets(self,pgn,datas):
@@ -226,6 +247,35 @@ class NMEA2000:
                 self._analyse6 = "Coor " + self._pgn2
                 self._analyse5 = "Coor " + self._pgn2
                 self._analyse4 = "Coor " + self._pgn2
+
+            case 129038:
+                self._valeurChoisie1 = datas[0] & 0x1F
+                self._pgn1 = "AIS Posittion Class A"
+
+                if self._valeurChoisie1 == 0:
+                    self._valeurChoisie2 = datas[6] << 24 | datas[5] << 16 | datas[4] << 8 | datas[3]
+                    self._pgn2 = "MMSI"
+                    self.set_memoire(7,129038,self._valeurChoisie1 + 1,datas[7])
+
+                elif self._valeurChoisie1 == 1:
+                    self._valeurChoisie2 = (datas[3] << 24 | datas[2] << 16 | datas[1] << 8
+                                            | self.get_memoire(7,129038,self._valeurChoisie1)) * (10**-7)
+                    self._pgn2 = "Longitude"
+
+                    self._valeurChoisie2 = (datas[7] << 24 | datas[6] << 16 | datas[5] << 8 | datas[4] ) * (10**-7)
+                    self._pgn2 = "Latitude"
+
+                elif self._valeurChoisie1 == 2:
+                    self._valeurChoisie2 = "{:.2f}".format((datas[3] << 8 | datas[2]) * 0.0001 * 180 / math.pi)
+                    self._pgn2 = "COG"
+
+                    self._valeurChoisie3 = "{:.2f}".format((datas[5] << 8 | datas[4]) * 0.01 * 1.94384449)
+                    self._pgn3 = "SOG"
+
+                elif self._valeurChoisie1 == 3:
+                    self._valeurChoisie2 = "{:.2f}".format((datas[3] << 8 | datas[2]) * 0.0001 * 180 / math.pi)
+                    self._pgn2 = "Heading"
+
 
             case _:
                 self._pgn1 = "<PGN inconnu sur cette version>"
