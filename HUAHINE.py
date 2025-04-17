@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QPushButton, QTableView, QMessageBox, QFileDialog, Q
 from PyQt5.QtWidgets import QApplication, QMainWindow, QAbstractItemView
 from PyQt5.QtCore import Qt, QAbstractTableModel, QModelIndex
 from PyQt5 import uic
-from PyQt5.QtGui import QIcon, QStandardItemModel
+from PyQt5.QtGui import QIcon
 from Package.CANUSB import WindowsUSBCANInterface
 from Package.constante import *
 from Package.TraitementCAN import TraitementCAN
@@ -178,7 +178,7 @@ class MainWindow(QMainWindow):
         self.configurer_colonnes()
 
     # ========================== DEBUT DES METHODES =========================================
-    def on_selection_changed(self, selected, deselected):
+    def on_selection_changed(self):
         """
         Méthode appelée lorsqu'une sélection change, que ce soit via le clavier ou la souris.
         """
@@ -195,7 +195,7 @@ class MainWindow(QMainWindow):
 
         # Extraire les valeurs des 3 colonnes
         col1 = model.data(model.index(ligne, 0), Qt.DisplayRole)
-        col2 = model.data(model.index(ligne, 1), Qt.DisplayRole)
+        # col2 = model.data(model.index(ligne, 1), Qt.DisplayRole)
         col3 = model.data(model.index(ligne, 2), Qt.DisplayRole)
 
         print(f"Valeur de col1: {col1} (type: {type(col1)})")

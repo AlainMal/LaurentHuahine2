@@ -445,34 +445,40 @@ class NMEA2000:
                 self._pgn1 = "Liste de PGN"
 
                 if (self._valeurChoisie1 + 3) % 3 == 0:
-                    self._pgn1 = "PGN"
                     temp = (datas[5] << 16 | datas[4] << 8 | datas[3])
                     if not (temp < 59392 or temp > 130944):
                         self._valeurChoisie2 = temp
                         self.set_memoire(MEMOIRE_PGN_a6, PGN_127506, self._valeurChoisie1 + 1, datas[6])
                         self.set_memoire(MEMOIRE_PGN_a7, PGN_127506, self._valeurChoisie1 + 1, datas[7])
-
                         self._pgn2 = "Num PGN"
 
                 elif (self._valeurChoisie1 + 2) % 3 == 0:
-                    temp =  (datas[2] << 16 | self.get_memoire(MEMOIRE_PGN_a7,PGN_127506,self._valeurChoisie1) << 8
+                    temp =  (datas[1] << 16 | self.get_memoire(MEMOIRE_PGN_a7,PGN_127506,self._valeurChoisie1) << 8
                                             | self.get_memoire(MEMOIRE_PGN_a6,PGN_127506,self._valeurChoisie1))
                     if not (temp < 59392 or temp > 130944):
                         self._valeurChoisie2 = temp
-                        self._valeurChoisie3 = (datas[4] << 16 | datas[3] << 8 | datas[2])
-                        self._valeurChoisieTab = "Num PGN" + str(datas[7] << 16 | datas[6] << 8 | datas[5])
                         self._pgn2 = "Num PGN"
+
+                    temp = (datas[4] << 16 | datas[3] << 8 | datas[2])
+                    if not (temp < 59392 or temp > 130944):
+                        self._valeurChoisie3 = temp
                         self._pgn3 = "Num PGN"
 
+                    temp = (datas[7] << 16 | datas[6] << 8 | datas[5])
+                    if not (temp < 59392 or temp > 130944):
+                        self._valeurChoisieTab = "Num PGN" + str(temp)
+                        self._pgn3 = "Num PGN"
 
-                    if (self._valeurChoisie1 + 1) % 3 == 0:
-                        self._pgn2 = "PGN"
-                        temp = (datas[3] << 16 | datas[2] << 8 | datas[1])
-                        if not (temp < 59392 or temp > 130944):
-                            self._valeurChoisie2 = temp
-                            self._pgn2 = "Num PGN"
-                            self._valeurChoisie3 = (datas[6] << 16 | datas[5] << 8 | datas[4])
-                            self._pgn3 = "Num PGN"
+                elif (self._valeurChoisie1 + 1) % 3 == 0:
+                    temp = (datas[3] << 16 | datas[2] << 8 | datas[1])
+                    if not (temp < 59392 or temp > 130944):
+                        self._valeurChoisie2 = temp
+                        self._pgn2 = "Num PGN"
+
+                    temp = (datas[6] << 16 | datas[5] << 8 | datas[4])
+                    if not (temp < 59392 or temp > 130944):
+                        self._valeurChoisie3 = temp
+                        self._pgn3 = "Num PGN"
 
             case 127505:
                 self._valeurChoisie1 = (datas[2] << 8 | datas[1])  * 0.004
