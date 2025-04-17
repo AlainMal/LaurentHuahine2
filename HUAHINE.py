@@ -7,11 +7,60 @@ from PyQt5.QtWidgets import QPushButton, QTableView, QMessageBox, QFileDialog, Q
 from PyQt5.QtWidgets import QApplication, QMainWindow, QAbstractItemView
 from PyQt5.QtCore import Qt, QAbstractTableModel, QModelIndex
 from PyQt5 import uic
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QStandardItemModel
 from Package.CANUSB import WindowsUSBCANInterface
 from Package.constante import *
 from Package.TraitementCAN import TraitementCAN
 from Package.NMEA_2000 import NMEA2000
+
+# ************************************ FENETRE DU STATUS ***************************************************************
+class FenetreStatus(QMainWindow):
+    def __init__(self, status):
+        super(FenetreStatus, self).__init__()
+        self._status = status
+        self.setFixedSize(290, 230)
+        self.setWindowTitle("Statuts")
+
+        # Création du QTreeWidget
+        self._treewidget = QTreeWidget(self)
+        self._treewidget.setColumnCount(2)
+        self._treewidget.setHeaderLabels(["Désignations", "Etats"])
+        self.setCentralWidget(self._treewidget)
+
+        self._treewidget.setColumnWidth(0, 230)  # Définit la largeur de la première colonne à 200 pixels
+        self._treewidget.setColumnWidth(1, 7)
+
+        # Remplir le TreeWidget
+        self.remplir_treewidget()
+
+    # ========================== DEBUT DES METHODES STATUS =========================================
+    def remplir_treewidget(self):
+        # La liste des différents défauts
+        status_data = (
+            ("Pas de défaut", "CANSTATUS_NO_ERROR"),
+            ("Buffer de réception plein", "CANSTATUS_RECEIVE_FIFO_FULL"),
+            ("Buffer de transmission plein", "CANSTATUS_TRANSMIT_FIFO_FULL"),
+            ("Avertissement erreur", "CANSTATUS_ERROR_WARNING"),
+            ("Surcharge des Données", "CANSTATUS_DATA_OVERRUN"),
+            ("Erreur passive", "CANSTATUS_ERROR_PASSIVE"),
+            ("Défaut d'arbitrage", "CANSTATUS_ARBITRATION_LOST"),
+            ("Erreur sur le bus", "CANSTATUS_BUS_ERROR")
+        )
+
+        # Vérifiez que le widget TreeWidget existe
+        if self._treewidget:
+            # Parcourir les données et insérer dans le TreeWidget
+            for index, element in enumerate(status_data):
+                designation = element[0]
+                colonne_2 = "X" if (self._status == 0 and index == 0) else ""
+
+                # Ajouter l'élément dans le TreeWidget
+                item = QTreeWidgetItem([designation, colonne_2])
+                self._treewidget.addTopLevelItem(item)
+
+            print("TREEWIDGET REMPLI")
+# *************************************** FIN DE LA FENETRE STATUS *****************************************************
+
 
 # ********************************** CLASSE MODELE DE LA TABLE *********************************************************
 # Cette classe sert de modèle à la table incluse dans MainWindow()
@@ -71,55 +120,6 @@ class TableModel(QAbstractTableModel):
 # ************************************ FIN DE LA CLASSE  TableModel ****************************************************
 
 
-# ************************************ FENETRE DU STATUS ***************************************************************
-class FenetreStatus(QMainWindow):
-    def __init__(self, status):
-        super(FenetreStatus, self).__init__()
-        self._status = status
-        self.setFixedSize(290, 230)
-        self.setWindowTitle("Statuts")
-
-        # Création du QTreeWidget
-        self._treewidget = QTreeWidget(self)
-        self._treewidget.setColumnCount(2)
-        self._treewidget.setHeaderLabels(["Désignations", "Etats"])
-        self.setCentralWidget(self._treewidget)
-
-        self._treewidget.setColumnWidth(0, 230)  # Définit la largeur de la première colonne à 200 pixels
-        self._treewidget.setColumnWidth(1, 7)
-
-        # Remplir le TreeWidget
-        self.remplir_treewidget()
-
-    # ========================== DEBUT DES METHODES STATUS =========================================
-    def remplir_treewidget(self):
-        # La liste des différents défauts
-        status_data = (
-            ("Pas de défaut", "CANSTATUS_NO_ERROR"),
-            ("Buffer de réception plein", "CANSTATUS_RECEIVE_FIFO_FULL"),
-            ("Buffer de transmission plein", "CANSTATUS_TRANSMIT_FIFO_FULL"),
-            ("Avertissement erreur", "CANSTATUS_ERROR_WARNING"),
-            ("Surcharge des Données", "CANSTATUS_DATA_OVERRUN"),
-            ("Erreur passive", "CANSTATUS_ERROR_PASSIVE"),
-            ("Défaut d'arbitrage", "CANSTATUS_ARBITRATION_LOST"),
-            ("Erreur sur le bus", "CANSTATUS_BUS_ERROR")
-        )
-
-        # Vérifiez que le widget TreeWidget existe
-        if self._treewidget:
-            # Parcourir les données et insérer dans le TreeWidget
-            for index, element in enumerate(status_data):
-                designation = element[0]
-                colonne_2 = "X" if (self._status == 0 and index == 0) else ""
-
-                # Ajouter l'élément dans le TreeWidget
-                item = QTreeWidgetItem([designation, colonne_2])
-                self._treewidget.addTopLevelItem(item)
-
-            print("TREEWIDGET REMPLI")
-# *************************************** FIN DE LA FENETRE STATUS *****************************************************
-
-
 # ***************************************** FENETRE PRINCIAPALE ********************************************************
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -172,12 +172,21 @@ class MainWindow(QMainWindow):
 
         self.model = TableModel()
         self.table_can.setModel(self.model)
-
+        # Connecter le signal selectionChanged
+        self.table_can.selectionModel().selectionChanged.connect(self.on_selection_changed)
         # Configurer les largeurs des colonnes
         self.configurer_colonnes()
 
     # ========================== DEBUT DES METHODES =========================================
-    def on_click_table(self, index):
+    def on_selection_changed(self, selected, deselected):
+        """
+        Méthode appelée lorsqu'une sélection change, que ce soit via le clavier ou la souris.
+        """
+        indexes = self.table_can.selectionModel().selectedRows()
+        if indexes:  # Vérifier s'il y a une sélection active
+            self.on_click_table(indexes[0])  # Passer la première ligne sélectionnée à on_click_table
+
+    def on_click_table(self, index: QModelIndex):
         """
         Récupère les données de la ligne sélectionnée.
         """
@@ -194,9 +203,9 @@ class MainWindow(QMainWindow):
         if not col1.startswith("0x"):
             col1 = f"0x{col1}"
 
-        id = int(col1, 16)
-        print(f"ID de message converti : {id}")
-        pgn = self._nmea_2000.id(id)
+        id_msg = int(col1, 16)
+        print(f"ID de message converti : {id_msg}")
+        pgn = self._nmea_2000.id(id_msg)
         print(pgn)
 
         self.lab_pgn.setText("Issu de l'ID: PGN, Source, Destination, Priorité :\n                     "
@@ -397,7 +406,10 @@ class MainWindow(QMainWindow):
             return None
         try:
             QMessageBox.information(self, "IMPORTER", "Vous allez importer les 3000 premières du fichier")
-            self.setCursor(Qt.WaitCursor)
+            # self.setCursor(Qt.WaitCursor)
+            QApplication.setOverrideCursor(Qt.WaitCursor)
+            self.model.data_table = []
+
             liste_tuples = []
             with open(self._file_path, 'r', encoding='utf-8',errors='replace') as fichier:
                 for i, ligne in enumerate(fichier):
@@ -420,10 +432,15 @@ class MainWindow(QMainWindow):
                         for t in liste_tuples]
 
                     self.affiche_trame(liste_modifiee)
-                self.unsetCursor()
+                # self.unsetCursor()
         except FileNotFoundError:
             print(f"Fichier non trouvé : {self._file_path}")
-            self.unsetCursor()
+            # self.unsetCursor()
+
+        finally:
+            QApplication.restoreOverrideCursor()
+
+
 # ========================== FIN DES METHODES =========================================
 
 
