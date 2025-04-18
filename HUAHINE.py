@@ -139,6 +139,8 @@ class MainWindow(QMainWindow):
         self._can_interface = WindowsUSBCANInterface(self._stop_flag)
         self._model = TableModel()
 
+        self._tasks = []
+
         # Variable pour les objets (Boutons, case à cocher, etc.)
         self._table = self.findChild(QTableView, 'table_can')
         self._open = self.findChild(QPushButton, "cmd_open")
@@ -171,7 +173,7 @@ class MainWindow(QMainWindow):
         # Configurer les largeurs des colonnes
         self.configurer_colonnes()
 
-    # ========================== DEBUT DES METHODES =========================================
+    # ========================== DEBUT DES METHODES LIEES A LA TABLE =========================================
     # Méthode sur changement de ligne sur la table.
     def on_selection_changed(self):
         """
@@ -252,7 +254,9 @@ class MainWindow(QMainWindow):
 
         # Ouvre la fenêtre
         self.show()
+    # ==================================================================================================================
 
+    # ============================== DEBUT DES METHODES LIEES A L'APPLICATION ==========================================
     # Métode sur fermeture de la fenêtre sue événemnt
     def closeEvent(self, event):
         # Appelle la méthode `close_both` pour gérer la fermeture proprement
@@ -339,6 +343,9 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 # Gestion des erreurs pendant la lecture
                 print(f"Erreur pendant la lecture CAN : {e}")
+            finally:
+                print("On est sortie de la boucle de lecture.")
+                return None
         print("Tache terminée")
 
     # Méthode qui gére le read() de manière asynchrone.
@@ -347,9 +354,15 @@ class MainWindow(QMainWindow):
         # car elle tourne en permanence.
         self._read.setEnabled(False)
         self._stop.setEnabled(True)
-        await self.read()
+        try:
+            await self.read()
+        except asyncio.CancelledError:
+            print("Tâche annulée proprement (via cancel).")
+        finally:
+            # Réactiver les boutons une fois terminé ou interrompu.
+            print("Main terminée.")
 
-    # Méthode sur click du bouton Read, mêt le fonction "main()" asynchone en route
+    # Méthode sur click du bouton Read, mêt le fonction "ma,in()" asynchone en route
     def on_click_read(self) -> None:
         self._stop_flag = False
         if self._handle == 256:
@@ -446,14 +459,14 @@ class MainWindow(QMainWindow):
                         for t in liste_tuples]
 
                     self.affiche_trame(liste_modifiee)
-                # self.unsetCursor()
+
         except FileNotFoundError:
             print(f"Fichier non trouvé : {self._file_path}")
             # self.unsetCursor()
 
         finally:
             QApplication.restoreOverrideCursor()
-# ========================== FIN DES METHODES =========================================
+# ======================================= FIN DES METHODES =============================================================
 
 
 if __name__ == "__main__":

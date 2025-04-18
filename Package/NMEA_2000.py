@@ -30,10 +30,10 @@ class NMEA2000:
         self._source = None
         self._pgn = None
 
-        # Défini la mémoire
+        # Défini la taille de la mémoire, ele est calculé au plus juste, mais c'est la plus rapide.
         nombre_octets = 8
-        nombre_pgn = 255
-        nombre_trames = 100
+        nombre_pgn = 25
+        nombre_trames = 25
         valeur_defaut = 0
 
         # Crée une table 3D fixe remplie avec la valeur par défaut
@@ -56,6 +56,7 @@ class NMEA2000:
                 self._pgn = (dp << 16) | (pf << 8) | ps
 
             return self._pgn
+
         except Exception as e:
             print(f"Erreur dans la méthode 'pgn' : {e}")
             raise
@@ -87,7 +88,6 @@ class NMEA2000:
 
     def get_memoire(self, numero_d_octet, numero_pgn, numero_de_trame):
         return self.memoire[numero_d_octet][numero_pgn][numero_de_trame]
-
     # ======================================== Fin des mémoires ========================================================
 
 
@@ -183,17 +183,14 @@ class NMEA2000:
                 if datas[2] & 0xEF != 0xEF:
                     self._valeurChoisie1 = "{:.2f}".format((datas[2] << 8 | datas[1]) * 0.01 - 273.15)
 
-
                 self._pgn2 = "Température de l'air"
                 if datas[4] & 0xEF != 0xEF:
                     if datas[4] & 0xEf != 0xEF:
                         self._valeurChoisie2 = "{:.2f}".format((datas[4] << 8 | datas[3]) * 0.01 - 273.15)
 
-
                 self._pgn3 = "Pression atmosphérique"
                 if datas[6] & 0xEF != 0xEF:
                     self._valeurChoisie3 = "{:.2f}".format((datas[6] << 8 | datas[5]))
-
 
                 # Pour Analyse.
                 self._analyse2 = "°C " + self._pgn1
@@ -213,7 +210,6 @@ class NMEA2000:
                     self._valeurChoisie2 = "{:.2f}".format((datas[4] << 8 | datas[3]) * 0.01 * 1.94384449)
 
                 self._valeurChoisieTab = (datas[5] & 0x07)
-                # self._pgntab =
 
                 # Pour Analyse.
                 self._analyse2 = "Nds " + self._pgn1
@@ -234,7 +230,6 @@ class NMEA2000:
                 self._pgn3 = "Température Batterie"
                 if datas[6] & 0xEf != 0xEF:
                     self._valeurChoisie3 = "{:.2f}".format((datas[6] << 8 | datas[5]) * 0.01 - 273.15)
-
 
                 # Pour Analyse.
                 self._analyse2 = "Volts " + self._pgn1
@@ -439,7 +434,6 @@ class NMEA2000:
                         if datas[1] & 0xEF != 0xEF:
                             self._valeurChoisie2 = (datas[1] << 8 | self.get_memoire(MEMOIRE_PGN_a7,PGN_127506,self._valeurChoisie1))
 
-
             case 126720:
                 self._valeurChoisie1 = (datas[0] & 0x1F)
                 self._pgn1 = "Info propriétaire"
@@ -552,12 +546,10 @@ class NMEA2000:
                     if datas[1] & 0xEF != 0xEF:
                         self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(1, 8)])
 
-
                 elif self._valeurChoisie1 == 5:
                     self._pgn2 = "Version"
                     if datas[3] & 0xEF != 0xEF:
                         self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(3, 8)])
-
 
             case 126998:
                 self._valeurChoisie1 = (datas[0] & 0x1F)
