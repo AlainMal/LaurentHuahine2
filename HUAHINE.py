@@ -1,6 +1,7 @@
 import asyncio
 import os
 import sys
+import resources_rc
 
 from qasync import QEventLoop
 from PyQt5.QtWidgets import QPushButton, QTableView, QMessageBox, QFileDialog, QTreeWidget, QTreeWidgetItem
@@ -123,27 +124,23 @@ class TableModel(QAbstractTableModel):
 # ***************************************** FENETRE PRINCIAPALE ********************************************************
 class MainWindow(QMainWindow):
     def __init__(self):
-        super(MainWindow,self).__init__()
+        super(MainWindow,self).__init__() # Lance la fenêtre
+        uic.loadUi('Alain.ui', self)
         self._fenetre_status = None
         self._file_path = None
-        self.setWindowIcon(QIcon("d:/alain/ps2.png"))
+
+        self.setWindowIcon(QIcon("icones/ps2.png"))
+
         self._traitement_can = TraitementCAN()
-        print("avant NMEA2000")
         self._nmea_2000 = NMEA2000()
-        print("apres NMEA2000" + str(self._nmea_2000))
+        self._can_interface = WindowsUSBCANInterface(self)
+        self._model = TableModel()
 
         #Chargement du formulaire.
         self._can_interface = None
         self._handle = None
         self._status = None
         self._stop_flag = False
-
-        # Importe l'UI fais avec le designer
-        # self.ui = Ui_MainWindow()
-        # self.ui.setupUi(self)
-        uic.loadUi('Alain.ui', self)
-
-        self._can_interface = WindowsUSBCANInterface(self)
 
         # Variable pour les objets (Boutons, case à cocher, etc.)
         self._table = self.findChild(QTableView, 'table_can')
@@ -170,7 +167,6 @@ class MainWindow(QMainWindow):
         self.table_can.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table_can.setSelectionBehavior(QAbstractItemView.SelectRows)
 
-        self._model = TableModel()
         self.table_can.setModel(self._model)
         # Connecter le signal selectionChanged
         self.table_can.selectionModel().selectionChanged.connect(self.on_selection_changed)
@@ -229,7 +225,10 @@ class MainWindow(QMainWindow):
                 print(f"Erreur dans l'appel à octets : {e}")
 
     def on_click_voir(self):
-        pass
+        if self._file_path:
+            os.system(f'notepad.exe "{self._file_path}"')
+        else:
+            QMessageBox.information(self, "VOIR", "Veuillez choisir un fichier avant de le voir.")
 
     # Cette méthode écrit avec addTrame défini dans la classe TableModel()
     def affiche_trame(self,trame):
@@ -238,7 +237,7 @@ class MainWindow(QMainWindow):
     def configurer_colonnes(self):
         self.table_can.setColumnWidth(0, 80)  # Largeur de "ID"
         self.table_can.setColumnWidth(1, 30)  # Largeur de "Len"
-        self.table_can.setColumnWidth(2, 180)  # Largeur de "Data"
+        self.table_can.setColumnWidth(2, 170)  # Largeur de "Data"
 
         # Initialisent les boutons à False'
         self._close.setEnabled(False)
