@@ -548,6 +548,30 @@ class NMEA2000:
                 self._valeurChoisie1 = "{:.2f}".format((datas[5] << 24 | datas[4] << 16 | datas[3] << 8 | datas[2]) * 0.01)
                 self._pgn1 = "XTE"
 
+            case 59392:
+                self._valeurChoisie1 = datas[7] << 16 | datas[6] << 8 | datas[5]
+                self._pgn1 = "Aquittement ISO"
+
+            case 59904:
+                self._valeurChoisie1 = datas[2] << 16 | datas[1] << 8 | datas[0]
+                self._pgn1 = "Réclame le PGN ISO"
+
+            case 60160:
+                self._valeurChoisie1 = datas[0]
+                self._pgn1 = "Protocole de transfert ISO"
+
+            case 61184:
+                self._valeurChoisie1 = datas[0]
+                self._pgn1 = "Propriétaire Numeéro"
+
+            case 60416:
+                self._valeurChoisie1 = datas[0] & 0x0F
+                self._pgn1 = "Protocole de transfert ISO"
+
+            case 60928:
+                self._pgn1 = "Réponse Adresse revendiquée"
+
+
             case _:
                 self._pgn1 = "<PGN inconnu sur cette version>"
 
