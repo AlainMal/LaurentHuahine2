@@ -1,7 +1,6 @@
 import asyncio
 import os
 import sys
-import resources_rc
 
 from qasync import QEventLoop
 from PyQt5.QtWidgets import QPushButton, QTableView, QMessageBox, QFileDialog, QTreeWidget, QTreeWidgetItem
