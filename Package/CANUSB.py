@@ -2,7 +2,7 @@ import ctypes
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from ctypes import Structure, c_ubyte,c_long, c_int, POINTER
-from Package.constante import *
+# from Package.constante import *
 
 
 class CanMsg(Structure):
@@ -20,14 +20,12 @@ class CanError(Exception):
 
 
 class WindowsUSBCANInterface:
-
     def __init__(self, stop_flag):
         self._etat = None
         self.msg = None
         self._stop_flag = stop_flag
         self.executor = ThreadPoolExecutor()
 
-        # ======================================================================
     # Charger la DLL
         try:
             self._dll = ctypes.WinDLL("canusbdrv64.dll")
@@ -49,11 +47,8 @@ class WindowsUSBCANInterface:
 
         self._handle = None
 
-    # Fonction d'ouverture de l'adaptateur. Cette fonction est appelé par le bouton "OPEN".
-    def open(self, bitrate=CAN_BAUD_250K,
-             acceptance_code=CANUSB_ACCEPTANCE_CODE_ALL,
-             acceptance_mask=CANUSB_ACCEPTANCE_MASK_ALL,
-             flags=CANUSB_FLAG_TIMESTAMP):
+    # Méthode d'ouverture de l'adaptateur. Cette fonction est appelé par le bouton "OPEN".
+    def open(self, bitrate, acceptance_code, acceptance_mask, flags):
         # Ouvre l'adapateur par l'instance
         self._handle = self._dll.canusb_Open(None, bitrate, acceptance_code, acceptance_mask, flags)
         if self._handle is None:
@@ -61,7 +56,7 @@ class WindowsUSBCANInterface:
         else:
             return self._handle     # Retourne le handle dont on a besoin pour savoir si c'est ouvert
 
-    # Fonction de lecture des trames du bus CAN en asychrone.
+    # Méthode de lecture des trames du bus CAN en asychrone.
     async def read(self, stop_flag) -> CanMsg:       # Retourne un pointeur sur le CanMsg
         if self._handle is None:
            raise CanError("Channel not open")
@@ -87,21 +82,18 @@ class WindowsUSBCANInterface:
             if result == 1:
                 break
 
-        # On attend 10ms pour éviter le blocage complet de la boucle asyncio. Peut-être supprimé ?
-        # await asyncio.sleep(0.01)
-
         # Une fois une trame reçue, on la retourne
         return self.msg  # Retourne le CanMsg dont on aura besoin pour l'enregistrer
 
-    # Fonction de fermeture de l'adaptateur.
+    # Méthode de fermeture de l'adaptateur.
     def close(self):
         if self._handle is not None:
             self._dll.canusb_Close(self._handle)
             self._handle = None
 
-    # Fonction de lecture du status de l'adaptateur
+    # Méthode de lecture du status de l'adaptateur
     def status(self):
         if self._handle is not None:
             self._etat = self._dll.canusb_Status(self._handle)
             return self._etat
-        
+ # =====================================================================================================================

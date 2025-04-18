@@ -32,25 +32,6 @@
     <property name="bottomMargin">
      <number>20</number>
     </property>
-    <item row="5" column="0">
-     <widget class="QLabel" name="lab_octet">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="autoFillBackground">
-       <bool>true</bool>
-      </property>
-      <property name="text">
-       <string>Signification</string>
-      </property>
-      <property name="wordWrap">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </item>
     <item row="0" column="3" rowspan="9" colspan="2">
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
@@ -238,6 +219,25 @@ font: 12pt &quot;Segoe UI&quot;;</string>
       </property>
       <property name="text">
        <string>Issu de l'ID: PGN, Source, Destination, Priorité :</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0" colspan="2">
+     <widget class="QLabel" name="lab_octet">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="autoFillBackground">
+       <bool>true</bool>
+      </property>
+      <property name="text">
+       <string>Signification</string>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
       </property>
      </widget>
     </item>

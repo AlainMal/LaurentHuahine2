@@ -127,19 +127,17 @@ class MainWindow(QMainWindow):
         uic.loadUi('Alain.ui', self)
         self._fenetre_status = None
         self._file_path = None
-
-        self.setWindowIcon(QIcon("icones/ps2.png"))
-
-        self._traitement_can = TraitementCAN()
-        self._nmea_2000 = NMEA2000()
-        self._can_interface = WindowsUSBCANInterface(self)
-        self._model = TableModel()
-
-        #Chargement du formulaire.
         self._can_interface = None
         self._handle = None
         self._status = None
         self._stop_flag = False
+
+        # Crée l'instance des Classes
+        self.setWindowIcon(QIcon("icones/ps2.png"))
+        self._traitement_can = TraitementCAN()
+        self._nmea_2000 = NMEA2000()
+        self._can_interface = WindowsUSBCANInterface(self._stop_flag)
+        self._model = TableModel()
 
         # Variable pour les objets (Boutons, case à cocher, etc.)
         self._table = self.findChild(QTableView, 'table_can')
@@ -162,10 +160,11 @@ class MainWindow(QMainWindow):
         self._voir.clicked.connect(self.on_click_voir)
         self._import.clicked.connect(self.on_click_import)
         self.check_file.stateChanged.connect(self.on_check_file_changed)
+
+        # Initialse la table.
         self.table_can.clicked.connect(self.on_click_table)
         self.table_can.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table_can.setSelectionBehavior(QAbstractItemView.SelectRows)
-
         self.table_can.setModel(self._model)
         # Connecter le signal selectionChanged
         self.table_can.selectionModel().selectionChanged.connect(self.on_selection_changed)
@@ -173,6 +172,7 @@ class MainWindow(QMainWindow):
         self.configurer_colonnes()
 
     # ========================== DEBUT DES METHODES =========================================
+    # Méthode sur changement de ligne sur la table.
     def on_selection_changed(self):
         """
         Méthode appelée lorsqu'une sélection change, que ce soit via le clavier ou la souris.
@@ -181,6 +181,7 @@ class MainWindow(QMainWindow):
         if indexes:  # Vérifier s'il y a une sélection active
             self.on_click_table(indexes[0])  # Passer la première ligne sélectionnée à on_click_table
 
+    # Méthode sur clique sur la table, elle est incluse sur méthode ci-dessus.
     def on_click_table(self, index: QModelIndex):
         """
         Récupère les données de la ligne sélectionnée.
@@ -203,10 +204,11 @@ class MainWindow(QMainWindow):
         tout_id = self._nmea_2000.id(id_msg)
         print(tout_id)
 
+        # Affiche le résultat sur la fenêtre.
         self.lab_pgn.setText("Issu de l'ID: PGN, Source, Destination, Priorité :\n                     "
-                             + str(tout_id))
+                             + f"{tout_id[0]} - {tout_id[1]} - {tout_id[2]} - {tout_id[3]}")
 
-        # Diffuse le résultat des octets avec leurs définitions.
+        # Affcihe le résultat des octets avec leurs définitions.
         if col3:
             data = col3.split(" ")
             print("PGN = " + str(int(tout_id[0])))
@@ -218,21 +220,23 @@ class MainWindow(QMainWindow):
                                        + str(octetstuple[1]) + ": " + str(octetstuple[4]) + "\n"
                                        + str(octetstuple[2]) + ": " + str(octetstuple[5]) + "\n"
                                        + "Table : " + str(octetstuple[6]))
-
                 print(octetstuple)
+
             except Exception as e:
                 print(f"Erreur dans l'appel à octets : {e}")
 
+    # Méthode pour voir le fichier enregister en mode bloc-notes.
     def on_click_voir(self):
         if self._file_path:
             os.system(f'notepad.exe "{self._file_path}"')
         else:
             QMessageBox.information(self, "VOIR", "Veuillez choisir un fichier avant de le voir.")
 
-    # Cette méthode écrit avec addTrame défini dans la classe TableModel()
+    # Cette méthode écrit dans la table.
     def affiche_trame(self,trame):
         self._model.addTrame(trame)
 
+    # Méthode pour configurer la table
     def configurer_colonnes(self):
         self.table_can.setColumnWidth(0, 80)  # Largeur de "ID"
         self.table_can.setColumnWidth(1, 30)  # Largeur de "Len"
@@ -271,9 +275,9 @@ class MainWindow(QMainWindow):
         self.on_click_close()
         self.close()
 
+    # Méthode pour ouvrir l'adaptateur CANUSB
     def on_click_open(self) -> int:
         self.setCursor(Qt.WaitCursor)
-
         # Appelle cette fonction de manière explicite et la fait passer sur "interface".
         self._handle = self._can_interface.open(CAN_BAUD_250K,
                                                 CANUSB_ACCEPTANCE_CODE_ALL,
@@ -287,10 +291,12 @@ class MainWindow(QMainWindow):
             self._close.setEnabled(True)
         else:
             QMessageBox.information(self, "OUVERTURE DE L'ADAPTATEUR!", "Vérifiez que vous êtes bien raccordé")
+
         self.unsetCursor()
 
         return self._handle
 
+    # Méthode pour fermer l'adaptateur
     def on_click_close(self) -> None:
         self.setCursor(Qt.WaitCursor)
 
@@ -304,9 +310,11 @@ class MainWindow(QMainWindow):
             self._stop.setEnabled(False)
             self._stop_flag = False
             self._handle = None
+
         self.unsetCursor()
         return None
 
+    # Méthode pour arrêter la lecture
     def on_click_stop(self):
         self._stop_flag = True
         self._read.setEnabled(True)
@@ -324,7 +332,8 @@ class MainWindow(QMainWindow):
                 msg = await self._can_interface.read(self._stop_flag)
                 n += 1
                 self.lab_trame.setText(str(n))  # Affiche le nombre de trames reçues.
-                # On enregistre ***********************************************************************VVVV
+
+                # On enregistre et on attend
                 await self._traitement_can.enregistrer(msg,self._file_path,self.check_file.isChecked(),self)
                 # return msg
 
@@ -332,7 +341,8 @@ class MainWindow(QMainWindow):
                 # Gestion des erreurs pendant la lecture
                 print(f"Erreur pendant la lecture CAN : {e}")
         print("Tache terminée")
-    # Méthode qui gére le read()
+
+    # Méthode qui gére le read() de manière asynchrone.
     async def main(self) -> None:
         # Attent le résulat du read, qui ne revoit rien,
         # car elle tourne en permanence.
@@ -340,12 +350,13 @@ class MainWindow(QMainWindow):
         self._stop.setEnabled(True)
         await self.read()
 
-    # Méthode sur clique, mêt le fonction "main()" asynchone en route
+    # Méthode sur click du bouton Read, mêt le fonction "main()" asynchone en route
     def on_click_read(self) -> None:
         self._stop_flag = False
         if self._handle == 256:
             asyncio.ensure_future(self.main())
 
+    # Méthode sur la case à cocher.
     def on_check_file_changed(self,state) :
         if state == Qt.Checked and not self._file_path:
              # La remet décochée
@@ -402,6 +413,7 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print(f"self._FenetreStatus.remplir_treeview(self._status) : {e}")
 
+    # Méthode pour importer le fichier dans la table.
     def on_click_import(self):
         if not self._file_path:
             QMessageBox.information(self,"IMPORTER LE FICHIER","Veuillez sélectionner un fichier avant d'importer")
