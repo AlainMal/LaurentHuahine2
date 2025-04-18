@@ -333,9 +333,8 @@ class MainWindow(QMainWindow):
                 n += 1
                 self.lab_trame.setText(str(n))  # Affiche le nombre de trames reçues.
 
-                # On enregistre et on attend
+                # On enregistre et on attend, voir TraiementCAN.py
                 await self._traitement_can.enregistrer(msg,self._file_path,self.check_file.isChecked(),self)
-                # return msg
 
             except Exception as e:
                 # Gestion des erreurs pendant la lecture

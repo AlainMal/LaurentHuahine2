@@ -8,9 +8,9 @@ class TraitementCAN:
     @staticmethod
     async def enregistrer(msg, file_path, coche,main_window):
         # print("On entre dans l'enregistement")
-        # Initialise data comme un str vide.
+        # Initialise datas comme un str vide.
         datas = ""
-        # On va définir les huits octets dans "datas".
+        # On défini les huits octets dans "datas".
         for i in range(msg.len):
             # On commence par un espace, car ça fini par le dernier octet.
             datas += " " + format(msg.data[i], "02X")
@@ -22,7 +22,10 @@ class TraitementCAN:
             # print("On a calculé la liste prête à être affiché sur le tableau")
             main_window.affiche_trame(trame_list)
         """
-        # On met le réulltat dans un fichier
-        if msg and coche:
-            with open(file_path, "a") as file:
-                file.write(f"{msg.TimeStamp} {msg.ID:08X} {msg.len}{datas}\n")
+        # On met le réulltat dans un fichier si la case à cocher est validée.
+        if msg:
+            if coche.isChecked():
+                with open(file_path, "a") as file:
+                    file.write(f"{msg.TimeStamp} {msg.ID:08X} {msg.len}{datas}\n")
+
+            # ATTENT POUR Y INCLURE LES DATAS **********************
