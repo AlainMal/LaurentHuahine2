@@ -22,6 +22,7 @@ PGN_127506 = 3
 PGN_126464 = 4
 # Liste à compléter...
 
+# Liste des octets
 MEMOIRE_PGN_a0 = 0
 MEMOIRE_PGN_a1 = 1
 MEMOIRE_PGN_a2 = 2

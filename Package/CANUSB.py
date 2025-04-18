@@ -1,7 +1,7 @@
 import ctypes
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from ctypes import Structure, c_ubyte,c_long, c_int, POINTER, c_uint8
+from ctypes import Structure, c_ubyte,c_long, c_int, POINTER
 from Package.constante import *
 
 

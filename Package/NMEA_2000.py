@@ -33,7 +33,7 @@ class NMEA2000:
         # Défini la mémoire
         nombre_octets = 8
         nombre_pgn = 255
-        nombre_trames = 255
+        nombre_trames = 100
         valeur_defaut = 0
 
         # Crée une table 3D fixe remplie avec la valeur par défaut
@@ -179,14 +179,21 @@ class NMEA2000:
                 self._analyse2 = "Table Temp."
 
             case 130310:
-                self._valeurChoisie1 = "{:.2f}".format((datas[2] << 8 | datas[1]) * 0.01 - 273.15)
                 self._pgn1 = "Température Mer"
+                if datas[2] & 0xEF != 0xEF:
+                    self._valeurChoisie1 = "{:.2f}".format((datas[2] << 8 | datas[1]) * 0.01 - 273.15)
 
-                self._valeurChoisie2 = "{:.2f}".format((datas[4] << 8 | datas[3]) * 0.01 - 273.15)
+
                 self._pgn2 = "Température de l'air"
+                if datas[4] & 0xEF != 0xEF:
+                    if datas[4] & 0xEf != 0xEF:
+                        self._valeurChoisie2 = "{:.2f}".format((datas[4] << 8 | datas[3]) * 0.01 - 273.15)
 
-                self._valeurChoisie3 = "{:.2f}".format((datas[6] << 8 | datas[5]))
+
                 self._pgn3 = "Pression atmosphérique"
+                if datas[6] & 0xEF != 0xEF:
+                    self._valeurChoisie3 = "{:.2f}".format((datas[6] << 8 | datas[5]))
+
 
                 # Pour Analyse.
                 self._analyse2 = "°C " + self._pgn1
@@ -197,11 +204,13 @@ class NMEA2000:
                 self._analyse5 = "mBar " + self._pgn3
 
             case 128259:
-                self._valeurChoisie1 = "{:.2f}".format((datas[2] << 8 | datas[1]) * 0.01 * 1.94384449)
                 self._pgn1 = "Vitesse surface"
+                if datas[2] & 0xEf != 0xEF:
+                    self._valeurChoisie1 = "{:.2f}".format((datas[2] << 8 | datas[1]) * 0.01 * 1.94384449)
 
-                self._valeurChoisie2 = "{:.2f}".format((datas[4] << 8 | datas[3]) * 0.01 * 1.94384449)
                 self._pgn2 = "Vitesse fond"
+                if datas[4] & 0xEf != 0xEF:
+                    self._valeurChoisie2 = "{:.2f}".format((datas[4] << 8 | datas[3]) * 0.01 * 1.94384449)
 
                 self._valeurChoisieTab = (datas[5] & 0x07)
                 # self._pgntab =
@@ -214,14 +223,18 @@ class NMEA2000:
                 self._analyse5 = "Table 3 bits"
 
             case 127508:
-                self._valeurChoisie1 = "{:.2f}".format((datas[2] << 8 | datas[1]) * 0.01)
                 self._pgn1 = "Volts Batterie"
+                if datas[2] & 0xEf != 0xEF:
+                    self._valeurChoisie1 = "{:.2f}".format((datas[2] << 8 | datas[1]) * 0.01)
 
-                self._valeurChoisie2 = "{:.2f}".format((datas[4] << 8 | datas[3]) * 0.1)
                 self._pgn2 = "Ampères Batterie"
+                if datas[4] & 0xEf != 0xEF:
+                    self._valeurChoisie2 = "{:.2f}".format((datas[4] << 8 | datas[3]) * 0.1)
 
-                self._valeurChoisie3 = "{:.2f}".format((datas[6] << 8 | datas[5]) * 0.01 - 273.15)
                 self._pgn3 = "Température Batterie"
+                if datas[6] & 0xEf != 0xEF:
+                    self._valeurChoisie3 = "{:.2f}".format((datas[6] << 8 | datas[5]) * 0.01 - 273.15)
+
 
                 # Pour Analyse.
                 self._analyse2 = "Volts " + self._pgn1
@@ -258,11 +271,11 @@ class NMEA2000:
                     self.set_memoire(MEMOIRE_PGN_a7,PGN_129038,self._valeurChoisie1 + 1,datas[7])
 
                 elif self._valeurChoisie1 == 1:
-                    self._valeurChoisie2 = (datas[3] << 24 | datas[2] << 16 | datas[1] << 8
-                                            | self.get_memoire(MEMOIRE_PGN_a7,PGN_129038,self._valeurChoisie1)) * (10**-7)
+                    self._valeurChoisie2 = "{:.6f}".format((datas[3] << 24 | datas[2] << 16 | datas[1] << 8
+                                            | self.get_memoire(MEMOIRE_PGN_a7,PGN_129038,self._valeurChoisie1)) * (10**-7))
                     self._pgn2 = "AIS_A Longitude"
 
-                    self._valeurChoisie3 = (datas[7] << 24 | datas[6] << 16 | datas[5] << 8 | datas[4] ) * (10**-7)
+                    self._valeurChoisie3 = "{:.6f}".format((datas[7] << 24 | datas[6] << 16 | datas[5] << 8 | datas[4] ) * (10**-7))
                     self._pgn3 = "AIS_A Latitude"
 
                 elif self._valeurChoisie1 == 2:
@@ -351,11 +364,11 @@ class NMEA2000:
                     self.set_memoire(MEMOIRE_PGN_a7, PGN_129039, self._valeurChoisie1 + 1, datas[7])
 
                 elif self._valeurChoisie1 == 1:
-                    self._valeurChoisie2 = (datas[3] << 24 | datas[2] << 16 | datas[1] << 8
-                                            | self.get_memoire(MEMOIRE_PGN_a7,PGN_129039,self._valeurChoisie1)) * (10**-7)
+                    self._valeurChoisie2 = "{:.6f}".format((datas[3] << 24 | datas[2] << 16 | datas[1] << 8
+                                            | self.get_memoire(MEMOIRE_PGN_a7,PGN_129039,self._valeurChoisie1)) * (10**-7))
                     self._pgn2 = "AIS_B Longitude"
 
-                    self._valeurChoisie3 = (datas[7] << 24 | datas[6] << 16 | datas[5] << 8 | datas[4] ) * (10**-7)
+                    self._valeurChoisie3 = "{:.6f}".format((datas[7] << 24 | datas[6] << 16 | datas[5] << 8 | datas[4] ) * (10**-7))
                     self._pgn3 = "AIS_B Latitude"
 
                 elif self._valeurChoisie1 == 2:
@@ -398,11 +411,14 @@ class NMEA2000:
                 self._pgn1 = "Données de direction"
 
                 if self._valeurChoisie1 == 1:
-                    self._valeurChoisie2 = "{:.2f}".format((datas[2] << 8 | datas[1]) * 0.0001 * 180 / math.pi)
                     self._pgn2 = "COG"
+                    if datas[2] & 0xEF != 0xEF:
+                        self._valeurChoisie2 = "{:.2f}".format((datas[2] << 8 | datas[1]) * 0.0001 * 180 / math.pi)
 
-                    self._valeurChoisie3 = "{:.2f}".format((datas[4] << 8 | datas[3]) * 0.01 * 1.94384449)
                     self._pgn3 = "SOG"
+                    if datas[4] & 0xEF != 0xEF:
+                        self._valeurChoisie3 = "{:.2f}".format((datas[4] << 8 | datas[3]) * 0.01 * 1.94384449)
+
 
             case 127506:
                 self._valeurChoisie1 = (datas[0] & 0x1F)
@@ -419,8 +435,10 @@ class NMEA2000:
 
                 elif self._valeurChoisie1 == 1:
                     if not self.get_memoire(MEMOIRE_PGN_a7,PGN_127506,self._valeurChoisie1) == 0xFF:
-                        self._valeurChoisie2 = (datas[1] << 8 | self.get_memoire(MEMOIRE_PGN_a7,PGN_127506,self._valeurChoisie1))
-                        self._pgn1 = "Temps restant"
+                        self._pgn2 = "Temps restant"
+                        if datas[1] & 0xEF != 0xEF:
+                            self._valeurChoisie2 = (datas[1] << 8 | self.get_memoire(MEMOIRE_PGN_a7,PGN_127506,self._valeurChoisie1))
+
 
             case 126720:
                 self._valeurChoisie1 = (datas[0] & 0x1F)
@@ -446,55 +464,62 @@ class NMEA2000:
 
                 if (self._valeurChoisie1 + 3) % 3 == 0:
                     temp = (datas[5] << 16 | datas[4] << 8 | datas[3])
-                    if not (temp < 59392 or temp > 130944):
+                    self._pgn2 = "Num PGN"
+                    if not (temp < 59392 or temp > 130944 or datas[5] & 0xEF == 0xEF):
                         self._valeurChoisie2 = temp
                         self.set_memoire(MEMOIRE_PGN_a6, PGN_127506, self._valeurChoisie1 + 1, datas[6])
                         self.set_memoire(MEMOIRE_PGN_a7, PGN_127506, self._valeurChoisie1 + 1, datas[7])
-                        self._pgn2 = "Num PGN"
+
 
                 elif (self._valeurChoisie1 + 2) % 3 == 0:
                     temp =  (datas[1] << 16 | self.get_memoire(MEMOIRE_PGN_a7,PGN_127506,self._valeurChoisie1) << 8
                                             | self.get_memoire(MEMOIRE_PGN_a6,PGN_127506,self._valeurChoisie1))
-                    if not (temp < 59392 or temp > 130944):
+                    self._pgn2 = "Num PGN"
+                    if not (temp < 59392 or temp > 130944 or datas[1] & 0xEF == 0xEF):
                         self._valeurChoisie2 = temp
-                        self._pgn2 = "Num PGN"
+
 
                     temp = (datas[4] << 16 | datas[3] << 8 | datas[2])
-                    if not (temp < 59392 or temp > 130944):
+                    self._pgn3 = "Num PGN"
+                    if not (temp < 59392 or temp > 130944 or datas[4] & 0xEF == 0xEF):
                         self._valeurChoisie3 = temp
-                        self._pgn3 = "Num PGN"
+
 
                     temp = (datas[7] << 16 | datas[6] << 8 | datas[5])
-                    if not (temp < 59392 or temp > 130944):
+                    if not (temp < 59392 or temp > 130944 or datas[7] & 0xEF == 0xEF):
                         self._valeurChoisieTab = "Num PGN: " + str(temp)
-                        self._pgn3 = "Num PGN"
+
 
                 elif (self._valeurChoisie1 + 1) % 3 == 0:
                     temp = (datas[3] << 16 | datas[2] << 8 | datas[1])
-                    if not (temp < 59392 or temp > 130944):
+                    self._pgn2 = "Num PGN"
+                    if not (temp < 59392 or temp > 130944 or datas[3] & 0xEF == 0xEF):
                         self._valeurChoisie2 = temp
-                        self._pgn2 = "Num PGN"
+
 
                     temp = (datas[6] << 16 | datas[5] << 8 | datas[4])
-                    if not (temp < 59392 or temp > 130944):
+                    self._pgn3 = "Num PGN"
+                    if not (temp < 59392 or temp > 130944 or datas[6] & 0xEF == 0xEF):
                         self._valeurChoisie3 = temp
-                        self._pgn3 = "Num PGN"
+
 
             case 127505:
-                self._valeurChoisie1 = (datas[2] << 8 | datas[1])  * 0.004
                 self._pgn1 = "Niveau Réservoir"
+                if datas[2] & 0xEF != 0xEF:
+                    self._valeurChoisie1 = (datas[2] << 8 | datas[1])  * 0.004
 
-                self._valeurChoisie2 = (datas[6] << 24 | datas[5] << 16 | datas[4] << 8 | datas[3]) * 0.1
                 self._pgn2 = "Capacité du reservoir"
-
+                if datas[6] & 0xEF != 0xEF:
+                    self._valeurChoisie2 = (datas[6] << 24 | datas[5] << 16 | datas[4] << 8 | datas[3]) * 0.1
 
             case 128275:
                 self._valeurChoisie1 = (datas[0] & 0x1F)
                 self._pgn1 = "Journal"
 
                 if self._valeurChoisie1 == 1:
-                    self._valeurChoisie2 = (datas[6] << 24 | datas[5] << 16 | datas[4] << 8 | datas[3])
                     self._pgn2 = "Distance parcourrue"
+                    if datas[6] & 0xEF != 0xEF:
+                        self._valeurChoisie2 = (datas[6] << 24 | datas[5] << 16 | datas[4] << 8 | datas[3])
 
             case 129540:
                 self._valeurChoisie1 = (datas[0] & 0x1F)
@@ -516,25 +541,33 @@ class NMEA2000:
                 self._valeurChoisie1 = (datas[0] & 0x1F)
                 self._pgn1 = "Information prodruit"
 
-                self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(6, 8)])
-                self._pgn1 = "Configuration"
+                self._pgn2 = "Configuration"
+                if datas[6] & 0xEF != 0xEF:
+                    self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(6, 8)])
 
                 if (self._valeurChoisie1 == 1 or self._valeurChoisie1 == 2
                                             or self._valeurChoisie1 == 3 or
                                             self._valeurChoisie1 == 4):
-                    self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(1, 8)])
-                    self._pgn2 ="Configuration"
+                    self._pgn2 = "Configuration"
+                    if datas[1] & 0xEF != 0xEF:
+                        self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(1, 8)])
+
 
                 elif self._valeurChoisie1 == 5:
-                    self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(3, 8)])
                     self._pgn2 = "Version"
+                    if datas[3] & 0xEF != 0xEF:
+                        self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(3, 8)])
+
 
             case 126998:
                 self._valeurChoisie1 = (datas[0] & 0x1F)
                 self._pgn1 = "Info Configuration"
+
                 if self._valeurChoisie1 == 0:
-                    self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(1, 7)])
                     self._pgn2 = "Configuration"
+                    if datas[6] & 0xEF != 0xEF:
+                        self._valeurChoisie2 = "".join([chr(datas[i]) for i in range(1, 7)])
+
 
             case 127258:
                 self._valeurChoisie1 = "{:.2f}".format((datas[5] << 8 | datas[4]) * 0.0001 * 180 / math.pi)
