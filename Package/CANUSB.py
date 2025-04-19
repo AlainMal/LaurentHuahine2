@@ -4,7 +4,6 @@ from concurrent.futures import ThreadPoolExecutor
 from ctypes import Structure, c_ubyte,c_long, c_int, POINTER
 # from Package.constante import *
 
-
 class CanMsg(Structure):
     _fields_ = (
         ("ID", c_long),
@@ -18,7 +17,7 @@ class CanMsg(Structure):
 class CanError(Exception):
     pass
 
-
+# ================================================== Classe Interface dll ==============================================
 class WindowsUSBCANInterface:
     def __init__(self, stop_flag):
         self._etat = None

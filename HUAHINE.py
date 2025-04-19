@@ -33,7 +33,7 @@ class FenetreStatus(QMainWindow):
         # Remplir le TreeWidget
         self.remplir_treewidget()
 
-    # ========================== DEBUT DES METHODES STATUS =========================================
+    # ======================================= DEBUT DES METHODES STATUS ===============================================
     def remplir_treewidget(self):
         # La liste des différents défauts
         status_data = (

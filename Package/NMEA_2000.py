@@ -91,7 +91,7 @@ class NMEA2000:
     # ======================================== Fin des mémoires ========================================================
 
 
-    # ========================== Méthodes de récupération des valeurs des octets =======================================
+    # ============================= Méthodes de récupération des valeurs des octets ====================================
     def octets(self,pgn,datas):
         print("Est bien entré dans octets.")
         self._pgn1 = None

@@ -1,6 +1,7 @@
 
 # Cette classe sert uniquement à traiter les résultats, il n'y a pas de self.
 # C'est prévu de lui faire traiter le NMEA 2000 en temps réel.
+# ======================================================================================================================
 class TraitementCAN:
     def __init__(self):
           pass
