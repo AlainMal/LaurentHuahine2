@@ -124,6 +124,7 @@ class TableModel(QAbstractTableModel):
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow,self).__init__() # Lance la fenêtre
+        self.loop = None
         uic.loadUi('Alain.ui', self)
         self._fenetre_status = None
         self._file_path = None
@@ -227,13 +228,6 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 print(f"Erreur dans l'appel à octets : {e}")
 
-    # Méthode pour voir le fichier enregister en mode bloc-notes.
-    def on_click_voir(self):
-        if self._file_path:
-            os.system(f'notepad.exe "{self._file_path}"')
-        else:
-            QMessageBox.information(self, "VOIR", "Veuillez choisir un fichier avant de le voir.")
-
     # Cette méthode écrit dans la table.
     def affiche_trame(self,trame):
         self._model.addTrame(trame)
@@ -256,6 +250,13 @@ class MainWindow(QMainWindow):
         self.show()
     # ==================================================================================================================
 
+    # Méthode pour voir le fichier enregister en mode bloc-notes.
+    def on_click_voir(self):
+        if self._file_path:
+            os.system(f'notepad.exe "{self._file_path}"')
+        else:
+            QMessageBox.information(self, "VOIR", "Veuillez ouvrir un fichier avant de le voir.")
+
     # ============================== DEBUT DES METHODES LIEES A L'APPLICATION ==========================================
     # Métode sur fermeture de la fenêtre sue événemnt
     def closeEvent(self, event):
@@ -266,6 +267,7 @@ class MainWindow(QMainWindow):
 
     # Métode sur l'action sur le menu Quitter, on ferme tous.
     def close_both(self):
+        self.on_click_stop()
         print("Fermeture des fenêtres...")
         # Fermer FenetreStatus si elle est ouverte
         if self._fenetre_status is not None:
@@ -275,8 +277,7 @@ class MainWindow(QMainWindow):
 
         # Fermer la fenêtre courante
         print("Fermeture de la fenêtre principale")
-        self._stop_flag = True
-        self.on_click_close()
+        # self.on_click_close()
         self.close()
 
     # Méthode pour ouvrir l'adaptateur CANUSB
@@ -318,13 +319,6 @@ class MainWindow(QMainWindow):
         self.unsetCursor()
         return None
 
-    # Méthode pour arrêter la lecture
-    def on_click_stop(self):
-        self._stop_flag = True
-        self._read.setEnabled(True)
-        self._stop.setEnabled(False)
-        print("C'est Arrêté ...")
-
     # Méthode Asynchrone du read sur dll, boucle tout le temps et c'est une coroutine.
     async def read(self):
         print("On est entré dans la boucle de lecture.")
@@ -362,17 +356,36 @@ class MainWindow(QMainWindow):
             # Réactiver les boutons une fois terminé ou interrompu.
             print("Main terminée.")
 
-    # Méthode sur click du bouton Read, mêt le fonction "ma,in()" asynchone en route
-    def on_click_read(self) -> None:
+    async def run(self) -> None:
         self._stop_flag = False
         if self._handle == 256:
-            asyncio.ensure_future(self.main())
+            futur_task = asyncio.ensure_future(self.main())
+            if self._stop_flag:
+                futur_task.cancel()
+                await asyncio.sleep(0.1)
+
+    # Méthode sur click du bouton Read, mêt le fonction "run()" asynchone en route
+    def on_click_read(self) -> None:
+        self.loop = asyncio.get_event_loop()
+        if self.loop.is_running():  # Si une boucle tourne déjà
+            print("Boucle existante détectée, utilisation de ensure_future...")
+            asyncio.ensure_future(self.run())  # Lancer en arrière-plan
+        else:
+            print("Lancement d'une nouvelle boucle avec run_until_complete...")
+            self.loop.run_until_complete(self.run())  # Exécuter la tâche immédiatement
+
+    # Méthode pour arrêter la lecture
+    def on_click_stop(self):
+        self._stop_flag = True
+        self._read.setEnabled(True)
+        self._stop.setEnabled(False)
+        print("C'est Arrêté ...")
 
     # Méthode sur la case à cocher.
     def on_check_file_changed(self,state) :
-        if state == Qt.Checked and not self._file_path:
+        if state == Qt.Checked:
              # La remet décochée
-            QMessageBox.information(self, "ENREGISTREMENT", "Veuillez choisir un fichier avant de l'activer.")
+            QMessageBox.information(self, "ENREGISTREMENT", "Veuillez ouvrir un fichier avant de l'activer.")
             # self._file.setfocus()
             self.check_file.setChecked(False)
 
@@ -428,10 +441,10 @@ class MainWindow(QMainWindow):
     # Méthode pour importer le fichier dans la table.
     def on_click_import(self):
         if not self._file_path:
-            QMessageBox.information(self,"IMPORTER LE FICHIER","Veuillez sélectionner un fichier avant d'importer")
+            QMessageBox.information(self,"IMPORTER LE FICHIER","Veuillez ouvrir un fichier avant d'importer.")
             return None
         try:
-            QMessageBox.information(self, "IMPORTER", "Vous allez importer les 3000 premières du fichier")
+            QMessageBox.information(self, "IMPORTER", "Les 3000 premières du fichier seront affichées.")
             # self.setCursor(Qt.WaitCursor)
             QApplication.setOverrideCursor(Qt.WaitCursor)
             self._model.clear()

@@ -10,7 +10,7 @@ class TraitementCAN:
         # print("On entre dans l'enregistement")
         # Initialise datas comme un str vide.
         datas = ""
-        # On défini les huits octets dans "datas".
+        # On a défini les huits octets dans "datas".
         for i in range(msg.len):
             # On commence par un espace, car ça fini par le dernier octet.
             datas += " " + format(msg.data[i], "02X")
@@ -24,7 +24,7 @@ class TraitementCAN:
         """
         # On met le réulltat dans un fichier si la case à cocher est validée.
         if msg:
-            if coche.isChecked():
+            if coche:
                 with open(file_path, "a") as file:
                     file.write(f"{msg.TimeStamp} {msg.ID:08X} {msg.len}{datas}\n")
 

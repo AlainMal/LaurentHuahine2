@@ -84,7 +84,7 @@ class WindowsUSBCANInterface:
 
             if result == 1:
                 break
-            # Sinon c'est qu'on a pas reçue de trame, result == -7.
+            # Sinon c'est qu'on n'a pas reçue de trame, result == -7.
 
         # Une fois une trame reçue, on la retourne
         return self.msg  # Retourne le CanMsg dont on aura besoin pour l'enregistrer
