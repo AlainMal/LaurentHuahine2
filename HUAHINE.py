@@ -140,7 +140,7 @@ class MainWindow(QMainWindow):
         self._can_interface = WindowsUSBCANInterface(self._stop_flag)
         self._model = TableModel()
 
-        self._tasks = []
+        # self._tasks = []
 
         # Variable pour les objets (Boutons, case à cocher, etc.)
         self._table = self.findChild(QTableView, 'table_can')
@@ -248,17 +248,10 @@ class MainWindow(QMainWindow):
 
         # Ouvre la fenêtre
         self.show()
-    # ==================================================================================================================
-
-    # Méthode pour voir le fichier enregister en mode bloc-notes.
-    def on_click_voir(self):
-        if self._file_path:
-            os.system(f'notepad.exe "{self._file_path}"')
-        else:
-            QMessageBox.information(self, "VOIR", "Veuillez ouvrir un fichier avant de le voir.")
+    # =================================== FIN DES METHODE TABLE ========================================================
 
     # ============================== DEBUT DES METHODES LIEES A L'APPLICATION ==========================================
-    # Métode sur fermeture de la fenêtre sue événemnt
+     # Métode sur fermeture de la fenêtre sue événemnt
     def closeEvent(self, event):
         # Appelle la méthode `close_both` pour gérer la fermeture proprement
         self.close_both()
@@ -390,6 +383,12 @@ class MainWindow(QMainWindow):
             self.check_file.setChecked(False)
 
             return self.check_file
+    # Méthode pour voir le fichier enregister en mode bloc-notes.
+    def on_click_voir(self):
+        if self._file_path:
+            os.system(f'notepad.exe "{self._file_path}"')
+        else:
+            QMessageBox.information(self, "VOIR", "Veuillez ouvrir un fichier avant de le voir.")
 
     # Méthode pour ouvrir un fichier
     def on_click_file(self) -> os.path:

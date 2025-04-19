@@ -25,7 +25,7 @@ class CircularGauge(QWidget):
     def update_value(self):
         """Met à jour la valeur de la jauge."""
         if self.value != 70:
-            self.value = 70
+            self.value = 0
 
         self.update()  # Redessiner la jauge (très important avec QPainter)
 
@@ -49,7 +49,7 @@ class CircularGauge(QWidget):
         radius = min(center_x, center_y) - 20  # Rayon de la jauge
 
         # Dessiner le cercle de fond (arrière-plan)
-        pen = QPen(Qt.gray, 20)  # Créer un stylo de couleur grise et épaisseur
+        pen = QPen(Qt.gray, 15)  # Créer un stylo de couleur grise et épaisseur
         painter.setPen(pen)
         painter.drawEllipse(center_x - radius, center_y - radius, 2 * radius, 2 * radius)
 
@@ -58,12 +58,12 @@ class CircularGauge(QWidget):
         painter.setPen(pen)
         painter.drawArc(
             center_x - radius, center_y - radius, 2 * radius, 2 * radius,
-            200 * 16, -int(self.value * 10)  # Progression circulaire en fonction de value
+            200 * 16, -int(self.value * 50//16)  # Progression circulaire en fonction de value
         )
 
         # Ajouter une aiguille (facultatif)
         painter.setPen(QPen(Qt.red, 10))  # Créer un stylo rouge pour l'aiguille
-        angle = radians(360 * (self.value / 100) - 90)  # Calculer l'angle
+        angle = radians(360 * (self.value / 360) - 215)  # Calculer l'angle
         x2 = center_x + int(radius * cos(angle))  # Coordonnées x de l'aiguille
         y2 = center_y + int(radius  * sin(angle))  # Coordonnées y de l'aiguille
         painter.drawLine(center_x, center_y, x2, y2)  # Dessiner l'aiguille
