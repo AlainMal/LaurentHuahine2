@@ -11,8 +11,8 @@ class CircularGauge(QWidget):
         self.setWindowTitle("Jauge circulaire - Style Montre")
         self.setGeometry(100, 100, 400, 400)
         self.value = 0  # Valeur initiale de la jauge
-        self.timer = QTimer(self)  # Associer un timer à ce widget (important)
-        self.timer.timeout.connect(self.update_value)
+        self.timer = QTimer(self)                                   # Associer un timer à ce widget (important)
+        self.timer.timeout.connect(self.update_value)               # Met à jour toutes les 100 ms.
         self.timer.start(100)  # Mettre à jour toutes les 100 ms
 
         self.background_image = QPixmap("D:/Alain/ps2.png")
@@ -25,7 +25,7 @@ class CircularGauge(QWidget):
     def update_value(self):
         """Met à jour la valeur de la jauge."""
         if self.value != 70:
-            self.value = 80
+            self.value = 70
 
         self.update()  # Redessiner la jauge (très important avec QPainter)
 
@@ -58,7 +58,7 @@ class CircularGauge(QWidget):
         painter.setPen(pen)
         painter.drawArc(
             center_x - radius, center_y - radius, 2 * radius, 2 * radius,
-            200 * 16, -int(self.value * 5*3.6)  # Progression circulaire en fonction de value
+            200 * 16, -int(self.value * 10)  # Progression circulaire en fonction de value
         )
 
         # Ajouter une aiguille (facultatif)
