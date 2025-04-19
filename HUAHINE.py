@@ -248,7 +248,8 @@ class MainWindow(QMainWindow):
 
         # Ouvre la fenêtre
         self.show()
-    # =================================== FIN DES METHODE TABLE ========================================================
+    # =================================== FIN DES METHODES TABLE =======================================================
+
 
     # ============================== DEBUT DES METHODES LIEES A L'APPLICATION ==========================================
      # Métode sur fermeture de la fenêtre sue événemnt
